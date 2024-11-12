@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "intranet-spa-spfx-client-side-solution",
+    "id": "70b6c625-4db3-4165-b827-d07b12632b20",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.20.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "intranet-spa-spfx description"
+      },
+      "longDescription": {
+        "default": "intranet-spa-spfx description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "intranet-spa-spfx Feature",
+        "description": "The feature that activates elements of the intranet-spa-spfx solution.",
+        "id": "2347c06a-ace6-42a5-9d49-0974c9416fd7",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/intranet-spa-spfx.sppkg"
+  }
+}
