@@ -1,9 +1,12 @@
 import { createElement } from "react";
 
+import "./styles.css";
 import { Version } from "@microsoft/sp-core-library";
 import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
 import * as ReactDom from "react-dom";
 
+import { faviconUrl } from "./assets/assets";
+import { App } from "./routes";
 /* import {
   type IPropertyPaneConfiguration,
   PropertyPaneTextField
@@ -11,8 +14,6 @@ import * as ReactDom from "react-dom";
  
 import * as strings from 'IntranetSpaSpfxWebPartStrings';
 */
-
-import { App } from "./routes";
 
 export interface IIntranetSpaSpfxWebPartProps {
   description: string;
@@ -30,7 +31,6 @@ export default class IntranetSpaSpfxWebPart extends BaseClientSideWebPart<IIntra
   }
 
   protected async onInit(): Promise<void> {
-    const faviconUrl = "https://stackoverflow.com/favicon.ico";
     const oldFavicon = document.getElementById("favicon");
     if (oldFavicon) {
       oldFavicon.style.display = "none";
