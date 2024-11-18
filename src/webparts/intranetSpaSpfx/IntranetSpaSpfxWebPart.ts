@@ -2,7 +2,10 @@ import { createElement } from "react";
 
 import "./styles.css";
 import { Version } from "@microsoft/sp-core-library";
-import { BaseClientSideWebPart } from "@microsoft/sp-webpart-base";
+import {
+  BaseClientSideWebPart,
+  WebPartContext,
+} from "@microsoft/sp-webpart-base";
 import * as ReactDom from "react-dom";
 
 import { faviconUrl } from "./assets/assets";
@@ -16,14 +19,15 @@ import * as strings from 'IntranetSpaSpfxWebPartStrings';
 */
 
 export interface IIntranetSpaSpfxWebPartProps {
-  description: string;
+  //description: string;
+  context: WebPartContext;
 }
 
 export default class IntranetSpaSpfxWebPart extends BaseClientSideWebPart<IIntranetSpaSpfxWebPartProps> {
   public render(): void {
     const element: React.ReactElement<IIntranetSpaSpfxWebPartProps> =
       createElement(App, {
-        description: this.properties.description,
+        //description: this.properties.description,
         context: this.context,
       });
 
