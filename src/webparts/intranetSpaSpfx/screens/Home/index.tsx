@@ -1,12 +1,12 @@
 import { ReactElement } from "react";
-
-import { Button } from "./styles";
+import { Carrousel } from "../../components/Carroussel";
+import { CardNews } from "../../components/CardNews";
 
 export function Home(): ReactElement {
   return (
     <div>
-      <p>Home</p>
-      <Button>Teste</Button>
+      <Carrousel />
+      <CardNews />
     </div>
   );
 }
