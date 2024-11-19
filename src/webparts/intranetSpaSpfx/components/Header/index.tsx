@@ -1,5 +1,7 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
+import { NavBar, Logo, NavLinks, Link } from "./styles";
+import itLean from "../../assets/itlean.svg";
 import {
   getHeaderList,
   TGetHeaderListResponse,
@@ -21,14 +23,20 @@ export const Header = (): ReactElement => {
   }, [getData]);
 
   return (
-    <div>
-      <p>Header</p>;
-      {list &&
-        list.map((itens) => (
-          <a key={itens.Title} href={itens.Hyperlink.Url}>
-            {itens.Title}
-          </a>
-        ))}
-    </div>
+    <NavBar>
+      <Logo src={itLean} alt="Logo" />
+      <NavLinks>
+        {list &&
+          list.map((item) => (
+            <Link
+              key={item.Title}
+              isActive={location.pathname === item.Hyperlink.Url}
+              href={item.Hyperlink.Url}
+            >
+              {item.Title}
+            </Link>
+          ))}
+      </NavLinks>
+    </NavBar>
   );
 };
