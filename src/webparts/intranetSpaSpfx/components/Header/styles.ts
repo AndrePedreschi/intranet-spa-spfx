@@ -6,7 +6,7 @@ export const NavBar = styled.nav`
   justify-content: space-between;
   width: 100%;
   height: 7vh;
-  padding: 0 10%;
+  padding: 0 5rem;
   background-color: white;
   box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.25);
   @media (max-width: 767px) {
@@ -16,7 +16,7 @@ export const NavBar = styled.nav`
 `;
 export const Logo = styled.img`
   width: 14vh;
-  max-width: 9rem;
+  max-width: 144px;
   height: 40px;
   max-height: 40px;
   @media (max-width: 767px) {
@@ -26,7 +26,7 @@ export const Logo = styled.img`
 
 export const NavLinks = styled.div`
   display: flex;
-  gap: 32px;
+  gap: 2rem;
   @media (max-width: 767px) {
     gap: 0.625rem;
   }
