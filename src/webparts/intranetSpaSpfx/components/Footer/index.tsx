@@ -8,24 +8,23 @@ import {
   RightsContainer,
   RightsReserved,
 } from "./styles";
-import itleanWhite from "../../assets/itlean-white.svg";
 import {
   getFooterList,
   TGetFooterListResponse,
 } from "../../services/footer.service";
+import { getImagesList, TGetImagesList } from "../../services/logo.service";
 import { useZustandStore } from "../../store";
 
 export const Footer = (): ReactElement => {
   const { context } = useZustandStore();
   const [list, setList] = useState<TGetFooterListResponse[]>();
+  const [logo, setLogo] = useState<TGetImagesList[]>();
 
   const getData = useCallback(async () => {
     if (!context) return;
 
     setList(await getFooterList(context));
-
-    const res = await getFooterList(context);
-    console.log("lista footer", res);
+    setLogo(await getImagesList(context));
   }, [context]);
 
   function getDate(): string {
@@ -41,13 +40,18 @@ export const Footer = (): ReactElement => {
   return (
     <>
       <FooterContainer>
-        <Logo src={itleanWhite} alt="Logo" />
+        {logo &&
+          logo
+            .filter((item) => item.Name === "logo-branco.png")
+            .map((item) => (
+              <Logo key={item.Name} src={item.ServerRelativeUrl} alt="Logo" />
+            ))}
         <FooterLinks>
           {list &&
             list.map((item) => (
               <Link
                 key={item.Title}
-                isActive={location.pathname === item.Hyperlinks.Url}
+                isActive={location.href === item.Hyperlinks.Url}
                 href={item.Hyperlinks.Url}
               >
                 {item.Title}

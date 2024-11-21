@@ -6,29 +6,44 @@ export const FooterContainer = styled.footer`
   justify-content: space-between;
   width: 100%;
   height: 13vh;
-  padding: 0 13.416666666666666vh;
+  padding: 0 10%;
   background-color: #c02c2e;
   box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.25);
+  @media (max-width: 767px) {
+    padding: 0 1rem;
+    height: 8vh;
+  }
 `;
 export const Logo = styled.img`
   width: 14vh;
-  height: 4.916666666666667vh;
+  max-width: 9rem;
+  height: 40px;
+  max-height: 40px;
+  @media (max-width: 767px) {
+    width: 70px;
+  }
 `;
 
 export const FooterLinks = styled.div`
   display: flex;
-  gap: 3.333333333333333vh;
+  gap: 32px;
+  @media (max-width: 767px) {
+    gap: 0.625rem;
+  }
 `;
 
 export const Link = styled.a<{ isActive?: boolean }>`
   position: relative;
   color: #ffffff;
   text-decoration: none;
-  font-size: 2vh;
+  font-size: 1rem;
   transition: color 0.3s;
 
   &:hover {
     color: #000000;
+  }
+  @media (max-width: 767px) {
+    font-size: 0.75rem;
   }
 `;
 export const RightsContainer = styled.div`
@@ -39,10 +54,16 @@ export const RightsContainer = styled.div`
   align-items: center;
   text-align: center;
   background-color: #000000;
+  @media (max-width: 767px) {
+    height: 4vh;
+  }
 `;
 
 export const RightsReserved = styled.h1`
-  font-size: 2vh;
+  font-size: 1rem;
   font-weight: 400;
   color: #ffffff;
+  @media (max-width: 767px) {
+    font-size: 0.75rem;
+  }
 `;
