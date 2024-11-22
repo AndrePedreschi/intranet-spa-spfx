@@ -9,6 +9,40 @@ export type TGetSubCommentsListResponse = {
   AuthorId: number;
 };
 
+export type TRequestBody = {
+  IdComentario: number;
+  SubComentario: string;
+};
+
+/**
+ * Obtém a lista de subcomentários associada a um comentário específico no SharePoint.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações do site e da página atual.
+ * @param {number} commentId - O ID do comentário para o qual os subcomentários serão buscados.
+ * @returns {Promise<TGetSubCommentsListResponse[]>} Uma promessa que resolve com uma lista de subcomentários.
+ * @throws {Error} Lança um erro se a requisição falhar.
+ *
+ * @example
+ * const subComments = await getSubCommentsList(context, 12);
+ * console.log(subComments);
+ * // Saída esperada:
+ * // [
+ * //   {
+ * //     Id: 1,
+ * //     IdComentario: 123,
+ * //     SubComentario: "Este é um subcomentário.",
+ * //     Created: "2024-11-22T10:00:00Z",
+ * //     AuthorId: 45
+ * //   },
+ * //   {
+ * //     Id: 2,
+ * //     IdComentario: 123,
+ * //     SubComentario: "Outro subcomentário.",
+ * //     Created: "2024-11-22T11:00:00Z",
+ * //     AuthorId: 46
+ * //   }
+ * // ]
+ */
 export const getSubCommentsList = async (
   context: WebPartContext,
   commentId: number,
@@ -32,10 +66,28 @@ export const getSubCommentsList = async (
   return responseJson.value;
 };
 
+/**
+ * Envia um novo subcomentário para a lista "SubComentarios" no SharePoint.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações do site e da página atual.
+ * @param {TRequestBody} requestBody - O corpo da requisição contendo os dados do subcomentário.
+ * @returns {Promise<void>} Uma promessa que resolve com uma mensagem de sucesso ao enviar o subcomentário.
+ * @throws {Error} Lança um erro se a requisição falhar.
+ *
+ * @example
+ * const requestBody = {
+ *   IdComentario: 12,
+ *   SubComentario: "Este é um novo subcomentário."
+ * };
+ *
+ *  const response = await postNewSubComment(context, requestBody);
+ *  console.log(response.msg);
+ * // Saída esperada: "Comentário enviado com sucesso!"
+ */
 export const postNewSubComment = async (
   context: WebPartContext,
-  requestBody: any,
-): Promise<void> => {
+  requestBody: TRequestBody,
+): Promise<{ msg: string }> => {
   const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('SubComentarios')/items`;
 
   const body = JSON.stringify(requestBody);
@@ -55,4 +107,5 @@ export const postNewSubComment = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Views: ${errorText}`);
   }
+  return { msg: "Comentário enviado com sucesso!" };
 };
