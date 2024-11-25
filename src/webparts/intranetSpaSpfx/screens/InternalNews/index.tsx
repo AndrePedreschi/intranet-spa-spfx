@@ -5,55 +5,41 @@ import { useZustandStore } from "../../store";
 
 export function InternalNews(): ReactElement {
   const { context } = useZustandStore();
-  const [param, setParam] = useState("");
-  const itemsPerPage = 10;
 
-  const getWithParam = async () => {
-    if (context) {
-      try {
-        const { data, nextSkipToken } = await getNewsListPaginated(
-          context,
-          itemsPerPage,
-          param,
-        );
+  const [param, setParam] = useState<string>("");
+  const itemsPerPage = 2;
 
-        console.log("Itens da página seguinte:", data);
-        if (nextSkipToken) {
-          setParam(nextSkipToken);
-        } else {
-          console.log("Final da lista");
+  const getData = useCallback(
+    async (url?: string) => {
+      if (context) {
+        try {
+          const { data, nextSkipToken } = await getNewsListPaginated(
+            context,
+            itemsPerPage,
+            url,
+          );
+
+          if (nextSkipToken) {
+            setParam(nextSkipToken);
+          } else {
+            console.log("Final da lista");
+          }
+
+          console.log("Itens da página atual:", data);
+        } catch (error) {
+          console.error("Erro ao buscar dados paginados:", error);
         }
-      } catch (error) {
-        console.error("Erro ao buscar dados paginados:", error);
       }
-    }
-  };
+    },
+    [context],
+  );
 
-  const getData = useCallback(async () => {
-    if (context) {
-      try {
-        const { data, nextSkipToken } = await getNewsListPaginated(
-          context,
-          itemsPerPage,
-        );
-        if (nextSkipToken) {
-          setParam(nextSkipToken);
-        } else {
-          console.log("Final da lista");
-        }
-
-        console.log("Itens da página atual:", data);
-      } catch (error) {
-        console.error("Erro ao buscar dados paginados:", error);
-      }
-    }
-  }, [context]);
   useEffect(() => {
     getData();
-  }, [context, getData]);
+  }, [getData]);
   return (
     <div>
-      <button onClick={getWithParam}>get com parametro</button>
+      <button onClick={() => getData(param)}>get com parametro</button>
       <p>testing...</p>
     </div>
   );

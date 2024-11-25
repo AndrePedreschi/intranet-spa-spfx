@@ -18,23 +18,25 @@ export type TGetNewsListResponse = {
  * Este método faz uma requisição à API REST do SharePoint para obter os itens da lista "Noticias" e retorna as 4 notícias com o maior número de visualizações. A lista é filtrada e ordenada para garantir que as notícias mais populares sejam recuperadas.
  *
  * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} amountOfNews - Quantidade de itens a ser buscado.
  * @returns {Promise<TGetNewsListResponse[]>} Uma promessa que resolve com uma lista das 4 notícias mais visualizadas, cada uma com os campos: Id, Title, Likes, Views, LinkBanner, Descricao, Created, AuthorId.
  * @throws {Error} Lança um erro se a requisição falhar.
  *
  * @example
- * const mostViewedNews = await getMostViewedNewsList(context);
+ * const mostViewedNews = await getMostViewedNewsList(context, 4);
  * // A função retorna as 4 notícias mais visualizadas com os detalhes de cada uma.
  */
 export const getMostViewedNewsList = async (
   context: WebPartContext,
-): Promise<TGetNewsListResponse> => {
+  amountOfNews: number,
+): Promise<TGetNewsListResponse[]> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
   const orderBy = `&$orderby=Views desc`;
-  const top = `&$top=4`;
+  const top = `&$top=${amountOfNews}`;
 
   const response = await context.spHttpClient.get(
-    `${urlBase}${select}&${orderBy}&${top}`,
+    `${urlBase}${select}${orderBy}${top}`,
     SPHttpClient.configurations.v1,
   );
 
@@ -45,6 +47,43 @@ export const getMostViewedNewsList = async (
 
   const responseJson = await response.json();
   return responseJson.value;
+};
+
+/**
+ * Recupera os detalhes de uma notícia específica pelo seu ID a partir de uma lista no SharePoint.
+ *
+ * Este método busca uma notícia na lista `Noticias` com base no `newsId` fornecido e retorna suas propriedades selecionadas.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} newsId - O ID da notícia a ser buscada.
+ * @returns {Promise<TGetNewsListResponse>}
+ * Um objeto contendo os detalhes da notícia no formato `TGetNewsListResponse`.
+ * @throws {Error} Lança um erro se a requisição falhar ou se o item não for encontrado.
+ *
+ * @example
+ * const newsId = 123;
+ * const news = await getNewsById(context, newsId);
+ * console.log("Detalhes da notícia:", news);
+ */
+export const getNewsById = async (
+  context: WebPartContext,
+  newsId: number,
+): Promise<TGetNewsListResponse> => {
+  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
+  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+
+  const response = await context.spHttpClient.get(
+    `${urlBase}${select}`,
+    SPHttpClient.configurations.v1,
+  );
+
+  if (!response || (response && !response.ok)) {
+    const responseText = await response.text();
+    throw new Error(responseText);
+  }
+
+  const responseJson = await response.json();
+  return responseJson;
 };
 
 /**
@@ -62,18 +101,38 @@ export const getMostViewedNewsList = async (
  * @throws {Error} Lança um erro se a requisição falhar.
  *
  * @example
- * const pageSize = 10;
- * const { data, nextSkipToken } = await getNewsListPaginated(context, pageSize);
+ * const [param, setParam] = useState<string>("");
+ * const itemsPerPage = 2;
  *
- * if (nextSkipToken) {
- *   const nextPage = await getNewsListPaginated(context, pageSize, nextSkipToken);
- *   console.log("Próxima página de notícias:", nextPage.data);
- * }
+ * const getData = useCallback(
+ *   async (url?: string) => {
+ *     if (context) {
+ *       try {
+ *         const { data, nextSkipToken } = await getNewsListPaginated(
+ *           context,
+ *           itemsPerPage,
+ *           url,
+ *         );
+ *
+ *         if (nextSkipToken) {
+ *           setParam(nextSkipToken);
+ *         } else {
+ *           console.log("Final da lista");
+ *         }
+ *
+ *         console.log("Itens da página atual:", data);
+ *       } catch (error) {
+ *         console.error("Erro ao buscar dados paginados:", error);
+ *       }
+ *     }
+ *   },
+ *   [context],
+ * );
  */
 export const getNewsListPaginated = async (
   context: WebPartContext,
   pageSize: number,
-  skipToken?: string,
+  skipToken?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
@@ -98,6 +157,76 @@ export const getNewsListPaginated = async (
 
   const nextSkipToken: string | null = responseJson["@odata.nextLink"]
     ? new URL(responseJson["@odata.nextLink"]).searchParams.get("$skiptoken")
+    : null;
+
+  return {
+    data: responseJson.value,
+    nextSkipToken,
+  };
+};
+
+/**
+ * Recupera uma lista paginada de notícias de uma lista do SharePoint, utilizando uma URL de paginação simplificada.
+ *
+ * Este método permite obter itens em partes (paginação), com suporte a URLs de continuação para buscar as próximas páginas.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} pageSize - O número de itens a serem recuperados por página.
+ * @param {string | null} [nextUrl] - A URL para buscar a próxima página. Se omitida, inicia na primeira página.
+ * @returns {Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }>}
+ * Um objeto contendo:
+ * - `data`: Uma lista de objetos no formato `TGetNewsListResponse` contendo as notícias recuperadas.
+ * - `nextSkipToken`: A URL para buscar a próxima página, ou `null` se não houver mais páginas.
+ * @throws {Error} Lança um erro se a requisição falhar.
+ *
+ * @example
+ * const [param, setParam] = useState<string>("");
+ * const itemsPerPage = 2;
+ *
+ * const getData = useCallback(
+ *   async (url?: string) => {
+ *     if (context) {
+ *       try {
+ *         const { data, nextSkipToken } = await getNewsListPaginatedSimple(
+ *           context,
+ *           itemsPerPage,
+ *           url,
+ *         );
+ *         if (nextSkipToken) setParam(nextSkipToken);
+ *         console.log("Itens simples:", data);
+ *       } catch (error) {
+ *         console.error("Erro ao buscar dados paginados:", error);
+ *       }
+ *     }
+ *   },
+ *   [context],
+ * );
+ *
+ */
+export const getNewsListPaginatedSimple = async (
+  context: WebPartContext,
+  pageSize: number,
+  nextUrl?: string | null,
+): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
+  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
+  const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const top = `&$top=${pageSize}`;
+
+  const dataUrl = `${urlBase}${select}${top}`;
+
+  const dataResponse = await context.spHttpClient.get(
+    nextUrl || dataUrl,
+    SPHttpClient.configurations.v1,
+  );
+
+  if (!dataResponse.ok) {
+    const errorText = await dataResponse.text();
+    throw new Error(`Failed to get paginated items: ${errorText}`);
+  }
+
+  const responseJson = await dataResponse.json();
+  const nextSkipToken: string | null = responseJson["@odata.nextLink"]
+    ? responseJson["@odata.nextLink"]
     : null;
 
   return {
