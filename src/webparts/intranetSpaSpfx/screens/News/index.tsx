@@ -11,18 +11,43 @@ import {
   Typography,
   TypographyText,
 } from "./styles";
-import { getNewsList, TGetNewsListResponse } from "../../services/news.service";
+import {
+  getNewsListPaginated,
+  TGetNewsListResponse,
+} from "../../services/news.service";
 import { useZustandStore } from "../../store";
 
 export const News = (): ReactElement => {
   const { context } = useZustandStore();
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
 
-  const getData = useCallback(async () => {
-    if (!context) return;
+  const [, setParam] = useState("");
+  const itemsPerPage = 10;
 
-    setListNews(await getNewsList(context));
-  }, [context]);
+  const getData = useCallback(
+    async (url?: string) => {
+      if (context) {
+        try {
+          const { data, nextSkipToken } = await getNewsListPaginated(
+            context,
+            itemsPerPage,
+            url,
+          );
+
+          if (nextSkipToken) {
+            setParam(nextSkipToken);
+          } else {
+            console.log("Final da lista");
+          }
+
+          setListNews(data);
+        } catch (error) {
+          console.error("Erro ao buscar dados paginados:", error);
+        }
+      }
+    },
+    [context],
+  );
 
   function breakDescription(description: string, id: number): JSX.Element {
     if (description.length > 255) {
@@ -45,7 +70,8 @@ export const News = (): ReactElement => {
 
   function parseLikes(likes: string) {
     try {
-      return JSON.parse(likes || "[]")[0] || 0;
+      const likesParsed: number[] = JSON.parse(likes || "[]");
+      return likesParsed.length;
     } catch (error) {
       console.error("Erro ao processar os likes:", error);
       return 0;
@@ -76,7 +102,7 @@ export const News = (): ReactElement => {
                 </div>
               </Typography>
               <TypographyText>
-                {breakDescription(item.Descricao, item.ID)}
+                {breakDescription(item.Descricao, item.Id)}
               </TypographyText>
             </CardNews>
           ))}
