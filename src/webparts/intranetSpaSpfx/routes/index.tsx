@@ -5,7 +5,8 @@ import { HashRouter, Route, Switch } from "react-router-dom";
 import { Footer } from "../components/Footer";
 import { Header } from "../components/Header";
 import { IIntranetSpaSpfxWebPartProps } from "../IntranetSpaSpfxWebPart";
-import { Home } from "../screens/Home";
+// import { Home } from "../screens/Home";
+import { News } from "../screens/News";
 import { NotFound } from "../screens/NotFound";
 import { useZustandStore } from "../store";
 
@@ -20,7 +21,8 @@ export function App({ context }: IIntranetSpaSpfxWebPartProps): ReactElement {
     <HashRouter>
       <Header />
       <Switch>
-        <Route path="/" exact component={Home} />
+        {/* <Route path="/" exact component={Home} /> */}
+        <Route path="/" exact component={News} />
         {/* <Route
           path="/produto/:id"
           component={() => <ProtectedRoute component={ProductOverview} />}
