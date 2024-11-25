@@ -12,6 +12,19 @@ export type TGetNewsListResponse = {
   AuthorId: number;
 };
 
+/**
+ * Recupera as 4 notícias mais visualizadas de uma lista do SharePoint, ordenadas pela contagem de visualizações em ordem decrescente.
+ *
+ * Este método faz uma requisição à API REST do SharePoint para obter os itens da lista "Noticias" e retorna as 4 notícias com o maior número de visualizações. A lista é filtrada e ordenada para garantir que as notícias mais populares sejam recuperadas.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @returns {Promise<TGetNewsListResponse[]>} Uma promessa que resolve com uma lista das 4 notícias mais visualizadas, cada uma com os campos: Id, Title, Likes, Views, LinkBanner, Descricao, Created, AuthorId.
+ * @throws {Error} Lança um erro se a requisição falhar.
+ *
+ * @example
+ * const mostViewedNews = await getMostViewedNewsList(context);
+ * // A função retorna as 4 notícias mais visualizadas com os detalhes de cada uma.
+ */
 export const getMostViewedNewsList = async (
   context: WebPartContext,
 ): Promise<TGetNewsListResponse> => {
@@ -34,29 +47,80 @@ export const getMostViewedNewsList = async (
   return responseJson.value;
 };
 
-//trabalhando
+/**
+ * Recupera a lista de notícias paginada do SharePoint.
+ *
+ * Este método permite a obtenção de notícias em partes, utilizando o recurso de paginação do SharePoint com o skiptoken.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} pageSize - O número de itens a serem recuperados por página.
+ * @param {string} [skipToken] - O token de paginação para buscar a próxima página. Se omitido, busca a página seguinte.
+ * @returns {Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }>}
+ * Um objeto contendo:
+ * - `data`: Uma lista de objetos no formato `TGetNewsListResponse` contendo as notícias recuperadas.
+ * - `nextSkipToken`: O token de paginação para a próxima página, ou `null` se não houver mais páginas.
+ * @throws {Error} Lança um erro se a requisição falhar.
+ *
+ * @example
+ * const pageSize = 10;
+ * const { data, nextSkipToken } = await getNewsListPaginated(context, pageSize);
+ *
+ * if (nextSkipToken) {
+ *   const nextPage = await getNewsListPaginated(context, pageSize, nextSkipToken);
+ *   console.log("Próxima página de notícias:", nextPage.data);
+ * }
+ */
 export const getNewsListPaginated = async (
   context: WebPartContext,
-): Promise<any> => {
+  pageSize: number,
+  skipToken?: string,
+): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
-  const orderBy = `&$orderby=Views desc`;
-  const top = `&$top=4`;
+  const top = `&$top=${pageSize}`;
+  const skipTokenParam = skipToken
+    ? `&$skiptoken=${skipToken.replace("&", "%26")}`
+    : "";
 
-  const response = await context.spHttpClient.get(
-    `${urlBase}${select}&${orderBy}&${top}`,
+  const dataUrl = `${urlBase}${select}${top}${skipTokenParam}`;
+
+  const dataResponse = await context.spHttpClient.get(
+    dataUrl,
     SPHttpClient.configurations.v1,
   );
 
-  if (!response || (response && !response.ok)) {
-    const responseText = await response.text();
-    throw new Error(responseText);
+  if (!dataResponse.ok) {
+    const errorText = await dataResponse.text();
+    throw new Error(`Failed to get paginated items: ${errorText}`);
   }
 
-  const responseJson = await response.json();
-  return responseJson.value;
+  const responseJson = await dataResponse.json();
+
+  const nextSkipToken: string | null = responseJson["@odata.nextLink"]
+    ? new URL(responseJson["@odata.nextLink"]).searchParams.get("$skiptoken")
+    : null;
+
+  return {
+    data: responseJson.value,
+    nextSkipToken,
+  };
 };
 
+/**
+ * Atualiza o número de visualizações de uma notícia no SharePoint, incrementando em 1 o valor atual de visualizações.
+ *
+ * Este método recupera o item da notícia com base no ID fornecido, incrementa o contador de visualizações em 1 e atualiza o item no SharePoint.
+ * A atualização é feita usando o método `MERGE` da API REST do SharePoint, e o cabeçalho `IF-MATCH` é utilizado para garantir que a atualização aconteça apenas se os dados não forem alterados por outro usuário entre o momento da leitura e da atualização.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} newsId - O ID da notícia cujas visualizações devem ser atualizadas.
+ * @returns {Promise<void>} Uma promessa que resolve quando a operação de atualização for concluída com sucesso.
+ * @throws {Error} Lança um erro se a requisição falhar em qualquer momento (ao recuperar o item ou ao atualizar as visualizações).
+ *
+ * @example
+ * await updateNewsViews(context, 123);
+ * // A função tentará incrementar o número de visualizações da notícia com ID 123.
+ */
 export const updateNewsViews = async (
   context: WebPartContext,
   newsId: number,
@@ -101,6 +165,20 @@ export const updateNewsViews = async (
   }
 };
 
+/**
+ * Atualiza a lista de "likes" de uma notícia no SharePoint, adicionando ou removendo o usuário atual da lista de curtidas.
+ *
+ * Este método verifica se o usuário atual já curtiu a notícia. Caso já tenha curtido, ele remove o usuário da lista de curtidas. Se não, o usuário é adicionado à lista.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
+ * @param {number} newsId - O ID da notícia cujos "likes" devem ser atualizados.
+ * @returns {Promise<void>} Uma promessa que resolve quando a operação de atualização for concluída com sucesso.
+ * @throws {Error} Lança um erro se a requisição falhar em qualquer momento (ao recuperar o item ou ao atualizar os "likes").
+ *
+ * @example
+ * await updateNewsLikes(context, 123);
+ * // A função tentará adicionar ou remover o "like" do usuário atual para a notícia com ID 123.
+ */
 export const updateNewsLikes = async (
   context: WebPartContext,
   newsId: number,

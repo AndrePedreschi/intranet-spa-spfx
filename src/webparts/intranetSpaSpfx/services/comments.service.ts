@@ -120,7 +120,7 @@ export const postNewComment = async (
  * Este método adiciona ou remove o ID do usuário atual da lista de "likes" de um comentário específico.
  *
  * @param {WebPartContext} context - O contexto do WebPart que inclui informações do site e da página atual.
- * @param {number} newsId - O ID do comentário na lista "Comentarios" que será atualizado.
+ * @param {number} commentId - O ID do comentário na lista "Comentarios" que será atualizado.
  * @returns {Promise<void>} Uma promessa que resolve quando a atualização dos "likes" é concluída.
  * @throws {Error} Lança um erro se a recuperação ou a atualização do item falhar.
  *
@@ -134,9 +134,9 @@ export const postNewComment = async (
  */
 export const updateCommentLikes = async (
   context: WebPartContext,
-  newsId: number,
+  commentId: number,
 ): Promise<void> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items(${newsId})`;
+  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
   const getItemResponse = await context.spHttpClient.get(
     url,
     SPHttpClient.configurations.v1,
