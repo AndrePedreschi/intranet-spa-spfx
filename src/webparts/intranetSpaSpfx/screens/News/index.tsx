@@ -22,7 +22,7 @@ export const News = (): ReactElement => {
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
 
   const [, setParam] = useState("");
-  const itemsPerPage = 10;
+  const itemsPerPage = 25;
 
   const getData = useCallback(
     async (url?: string) => {
@@ -57,7 +57,7 @@ export const News = (): ReactElement => {
           {breakedDescription}
           {"... "}
           <Link
-            to={`/noticias/${id}`}
+            to={`/internalNews/${id}`}
             style={{ color: "blue", textDecoration: "underline" }}
           >
             Leia Mais
