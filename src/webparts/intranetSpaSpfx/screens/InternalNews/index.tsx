@@ -1,5 +1,7 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
+import { Card } from "./styles";
+import { InfiniteScroll } from "../../components/InfiniteScroll";
 import {
   getNewsListPaginated,
   TGetNewsListResponse,
@@ -9,14 +11,18 @@ import { useZustandStore } from "../../store";
 export function InternalNews(): ReactElement {
   const { context } = useZustandStore();
 
+  const [requestEnd, setRequestEnd] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
   const [param, setParam] = useState("");
   const itemsPerPage = 1;
 
   const getData = useCallback(
     async (url?: string) => {
+      if (requestEnd) return;
       if (context) {
         try {
+          setIsLoading(true);
           const { data, nextSkipToken } = await getNewsListPaginated(
             context,
             itemsPerPage,
@@ -26,30 +32,34 @@ export function InternalNews(): ReactElement {
           if (nextSkipToken) {
             setParam(nextSkipToken);
           } else {
-            console.log("Final da lista");
+            setRequestEnd(true);
           }
 
           setListNews((news) => [...(news || []), ...data]);
+          setIsLoading(false);
           return;
         } catch (error) {
           console.error("Erro ao buscar dados paginados:", error);
         }
       }
     },
-    [context],
+    [context, requestEnd],
   );
 
   useEffect(() => {
     getData();
-    return () => {
-      //captura o fim de vida do componente
-    };
   }, [getData]);
   return (
     <div>
-      <button onClick={() => getData(param)}>Get more</button>
-      {listNews &&
-        listNews.map((news, index) => <div key={index}>{news.Title}</div>)}
+      <InfiniteScroll
+        endOfListCondition={requestEnd}
+        handlerPageChange={() => getData(param)}
+        scrollRequestLoading={isLoading}
+        nextUrlRequest={param}
+      >
+        {listNews &&
+          listNews.map((news, index) => <Card key={index}>{news.Title}</Card>)}
+      </InfiniteScroll>
     </div>
   );
 }
