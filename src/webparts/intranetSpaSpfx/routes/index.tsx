@@ -23,13 +23,9 @@ export function App({ context }: IIntranetSpaSpfxWebPartProps): ReactElement {
       <Header />
       <Switch>
         <Route path="/" exact component={Home} />
-        <Route path="/internalNews" component={InternalNews} />
         <Route path="/news" component={News} />
-        {/* <Route
-          path="/produto/:id"
-          component={() => <ProtectedRoute component={ProductOverview} />}
-        /> */}
-
+        <Route path="/internalNews/:id" component={InternalNews} />
+        <Route path="/teste" component={InternalNews} />
         <Route path="*" component={NotFound} />
       </Switch>
       <Footer />

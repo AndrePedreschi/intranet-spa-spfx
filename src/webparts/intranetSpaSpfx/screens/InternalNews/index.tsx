@@ -1,13 +1,17 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { getNewsListPaginated } from "../../services/news.service";
+import {
+  getNewsListPaginated,
+  TGetNewsListResponse,
+} from "../../services/news.service";
 import { useZustandStore } from "../../store";
 
 export function InternalNews(): ReactElement {
   const { context } = useZustandStore();
 
-  const [param, setParam] = useState<string>("");
-  const itemsPerPage = 2;
+  const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
+  const [param, setParam] = useState("");
+  const itemsPerPage = 1;
 
   const getData = useCallback(
     async (url?: string) => {
@@ -25,7 +29,8 @@ export function InternalNews(): ReactElement {
             console.log("Final da lista");
           }
 
-          console.log("Itens da página atual:", data);
+          setListNews((news) => [...(news || []), ...data]);
+          return;
         } catch (error) {
           console.error("Erro ao buscar dados paginados:", error);
         }
@@ -36,11 +41,15 @@ export function InternalNews(): ReactElement {
 
   useEffect(() => {
     getData();
+    return () => {
+      //captura o fim de vida do componente
+    };
   }, [getData]);
   return (
     <div>
-      <button onClick={() => getData(param)}>get com parametro</button>
-      <p>testing...</p>
+      <button onClick={() => getData(param)}>Get more</button>
+      {listNews &&
+        listNews.map((news, index) => <div key={index}>{news.Title}</div>)}
     </div>
   );
 }
