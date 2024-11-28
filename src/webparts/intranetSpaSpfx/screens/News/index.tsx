@@ -1,25 +1,35 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 
 import {
   Banner,
+  ButtonBack,
   CardNews,
   ContainerNews,
+  DoubleArrow,
+  IconHeart,
   ReturnLink,
   TitleNews,
   Typography,
   TypographyText,
 } from "./styles";
+import doubleArrow from "../../assets/double-arrow.svg";
+import likedHeart from "../../assets/heart-liked.svg";
+import iconHeart from "../../assets/icon-heart.svg";
 import {
   getNewsListPaginated,
   TGetNewsListResponse,
+  updateNewsLikesAndViews,
 } from "../../services/news.service";
 import { useZustandStore } from "../../store";
 
 export const News = (): ReactElement => {
   const { context } = useZustandStore();
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
+  const [likedNews, setLikedNews] = useState<number[]>([]);
+  const history = useHistory();
+  const user: string = context?.pageContext?.legacyPageContext.userId;
 
   const [, setParam] = useState("");
   const itemsPerPage = 25;
@@ -50,8 +60,8 @@ export const News = (): ReactElement => {
   );
 
   function breakDescription(description: string, id: number): JSX.Element {
-    if (description.length > 255) {
-      const breakedDescription = description.slice(0, 255);
+    if (description.length > 90) {
+      const breakedDescription = description.slice(0, 90);
       return (
         <>
           {breakedDescription}
@@ -82,23 +92,51 @@ export const News = (): ReactElement => {
     return date.split("T")[0].split("-").reverse().join("/");
   }
 
+  async function handleLike(newsId: number) {
+    if (!likedNews.includes(newsId)) {
+      setLikedNews([...likedNews, newsId]);
+      if (context) {
+        await updateNewsLikesAndViews(context, newsId);
+        getData();
+      }
+    } else {
+      setLikedNews(likedNews.filter((id) => id !== newsId));
+      getData();
+    }
+  }
+
   useEffect(() => {
     getData();
   }, [getData]);
 
   return (
     <>
-      <ReturnLink href="/home">{"<< Voltar"}</ReturnLink>
+      <ReturnLink>
+        <ButtonBack onClick={() => history.goBack()}>
+          <DoubleArrow src={doubleArrow} alt="arrow" />
+          Voltar
+        </ButtonBack>
+      </ReturnLink>
       <ContainerNews>
         {listNews &&
           listNews.map((item) => (
-            <CardNews key={item.Title}>
+            <CardNews key={item.Id || item.Title}>
               <Banner src={item.LinkBanner}></Banner>
               <TitleNews>{item.Title}</TitleNews>
               <Typography>
                 {formateDate(item.Created)}
                 <div>
-                  {item.Views} Views {parseLikes(item.Likes)} Likes
+                  <IconHeart
+                    src={
+                      item.Likes && user && item.Likes.includes(user)
+                        ? likedHeart
+                        : iconHeart
+                    }
+                    alt="heart"
+                    liked={item.Likes && user && item.Likes.includes(user)}
+                    onClick={() => handleLike(item.Id)}
+                  />
+                  {parseLikes(item.Likes)} Likes <p>{item.Views} Views</p>
                 </div>
               </Typography>
               <TypographyText>
