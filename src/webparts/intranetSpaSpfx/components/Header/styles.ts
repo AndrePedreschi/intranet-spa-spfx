@@ -7,6 +7,7 @@ export const NavBar = styled.nav`
   width: 100%;
   height: 7vh;
   padding: 0 5rem;
+  margin-bottom: 3.125rem;
   background-color: white;
   box-shadow: 4px 4px 10px 0px rgba(0, 0, 0, 0.25);
   @media (max-width: 767px) {
