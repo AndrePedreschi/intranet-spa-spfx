@@ -10,6 +10,7 @@ import { InternalNews } from "../screens/InternalNews";
 import { News } from "../screens/News";
 import { NotFound } from "../screens/NotFound";
 import { useZustandStore } from "../store";
+import { GlobalFonts } from "../styles";
 
 export function App({ context }: IIntranetSpaSpfxWebPartProps): ReactElement {
   const { updateContext } = useZustandStore();
@@ -20,12 +21,12 @@ export function App({ context }: IIntranetSpaSpfxWebPartProps): ReactElement {
 
   return (
     <HashRouter>
+      <GlobalFonts />
       <Header />
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/news" component={News} />
         <Route path="/internalNews/:id" component={InternalNews} />
-        <Route path="/teste" component={InternalNews} />
         <Route path="*" component={NotFound} />
       </Switch>
       <Footer />

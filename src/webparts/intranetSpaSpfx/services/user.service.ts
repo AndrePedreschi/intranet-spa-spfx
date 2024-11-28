@@ -1,12 +1,16 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetUserResponse = {
   Id: number;
   Title: string;
   Email: string;
   UserImg: string;
 };
+
+const urlSite = useZustandStore.getState().urlSite;
 
 /**
  * Obtém informações detalhadas de um usuário do SharePoint por ID.
@@ -31,7 +35,7 @@ export const getUser = async (
   context: WebPartContext,
   userId: number,
 ): Promise<TGetUserResponse> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/getuserbyid(${userId})`;
+  const urlBase = `${urlSite}/_api/web/getuserbyid(${userId})`;
 
   const userResponse = await context.spHttpClient.get(
     urlBase,
@@ -44,7 +48,7 @@ export const getUser = async (
   }
 
   const userResponseJson = await userResponse.json();
-  const photoUrl = `${context.pageContext.web.absoluteUrl}/_layouts/15/userphoto.aspx?UserName=${userResponseJson.Email}&size=L`;
+  const photoUrl = `${urlSite}/_layouts/15/userphoto.aspx?UserName=${userResponseJson.Email}&size=L`;
 
   return {
     Id: userResponseJson.Id,

@@ -1,6 +1,8 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetHeaderListResponse = {
   Title: string;
   Hyperlink: {
@@ -10,10 +12,12 @@ export type TGetHeaderListResponse = {
   Link: string;
 };
 
+const urlSite = useZustandStore.getState().urlSite;
+
 export const getHeaderList = async (
   context: WebPartContext,
 ): Promise<TGetHeaderListResponse[]> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/GetById(id='f1d5f098-bf52-4edc-8278-396c363b216b')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/GetById(id='f1d5f098-bf52-4edc-8278-396c363b216b')/items`;
   const select = `?$select=Title,Hyperlink,Link`;
 
   const response = await context.spHttpClient.get(

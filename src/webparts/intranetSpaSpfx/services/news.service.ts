@@ -1,6 +1,8 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetNewsListResponse = {
   Id: number;
   Title: string;
@@ -11,7 +13,7 @@ export type TGetNewsListResponse = {
   Created: string;
   AuthorId: number;
 };
-
+const urlSite = useZustandStore.getState().urlSite;
 /**
  * Recupera as 4 notícias mais visualizadas de uma lista do SharePoint, ordenadas pela contagem de visualizações em ordem decrescente.
  *
@@ -30,7 +32,7 @@ export const getMostViewedNewsList = async (
   context: WebPartContext,
   amountOfNews: number,
 ): Promise<TGetNewsListResponse[]> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
   const orderBy = `&$orderby=Views desc`;
   const top = `&$top=${amountOfNews}`;
@@ -69,7 +71,7 @@ export const getNewsById = async (
   context: WebPartContext,
   newsId: number,
 ): Promise<TGetNewsListResponse> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
   const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
 
   const response = await context.spHttpClient.get(
@@ -134,7 +136,7 @@ export const getNewsListPaginated = async (
   pageSize: number,
   skipToken?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
   const skipTokenParam = skipToken
@@ -208,7 +210,7 @@ export const getNewsListPaginatedSimple = async (
   pageSize: number,
   nextUrl?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
   const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
 
@@ -254,7 +256,7 @@ export const updateNewsViews = async (
   context: WebPartContext,
   newsId: number,
 ): Promise<void> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
+  const url = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
   const getItemResponse = await context.spHttpClient.get(
     url,
     SPHttpClient.configurations.v1,
@@ -312,7 +314,7 @@ export const updateNewsLikes = async (
   context: WebPartContext,
   newsId: number,
 ): Promise<void> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
+  const url = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
   const getItemResponse = await context.spHttpClient.get(
     url,
     SPHttpClient.configurations.v1,

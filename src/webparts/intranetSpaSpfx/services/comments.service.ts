@@ -1,6 +1,8 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetCommentsListResponse = {
   Id: number;
   Likes: string;
@@ -14,6 +16,8 @@ export type TRequestBody = {
   Comentario: string;
   IdNoticia: number;
 };
+
+const urlSite = useZustandStore.getState().urlSite;
 
 /**
  * Obtém a lista de comentários associada a uma notícia específica no SharePoint.
@@ -49,8 +53,8 @@ export type TRequestBody = {
 export const getCommentsList = async (
   context: WebPartContext,
   newsId: number,
-): Promise<TGetCommentsListResponse> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items`;
+): Promise<TGetCommentsListResponse[]> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
   const select = `?$select=Id,Likes,IdNoticia,Comentario,Created,AuthorId`;
   const filter = `$filter=IdNoticia eq ${newsId}`;
   const orderBy = `&$orderby=Created asc`;
@@ -92,7 +96,7 @@ export const postNewComment = async (
   context: WebPartContext,
   requestBody: TRequestBody,
 ): Promise<{ msg: string }> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
 
   const body = JSON.stringify(requestBody);
 
@@ -102,7 +106,7 @@ export const postNewComment = async (
   };
 
   const updateResponse = await context.spHttpClient.post(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
     { body: body, headers: headers },
   );
@@ -136,9 +140,9 @@ export const updateCommentLikes = async (
   context: WebPartContext,
   commentId: number,
 ): Promise<void> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
   const getItemResponse = await context.spHttpClient.get(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
   );
 
@@ -171,7 +175,7 @@ export const updateCommentLikes = async (
   };
 
   const updateResponse = await context.spHttpClient.post(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
     { body: body, headers: headers },
   );

@@ -1,10 +1,16 @@
 import styled from "styled-components";
 
-export const Card = styled.div`
-  height: 100vh;
+export const Container = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  border: 5px solid red;
+  flex-direction: column;
+`;
+
+export const Back = styled.div`
+  width: 100%;
+`;
+
+export const Section = styled.section`
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  grid-column-gap: 1.25rem;
 `;

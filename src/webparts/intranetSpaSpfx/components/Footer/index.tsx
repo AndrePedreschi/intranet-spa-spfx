@@ -49,11 +49,7 @@ export const Footer = (): ReactElement => {
         <FooterLinks>
           {list &&
             list.map((item) => (
-              <Link
-                key={item.Title}
-                isActive={location.href === item.Hyperlinks.Url}
-                href={item.Hyperlinks.Url}
-              >
+              <Link key={item.Title} href={item.Hyperlinks.Url}>
                 {item.Title}
               </Link>
             ))}
