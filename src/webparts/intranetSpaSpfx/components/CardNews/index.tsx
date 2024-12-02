@@ -53,7 +53,7 @@ export const CardNews = ({
   const breakTitle = (): string => {
     if (title.length > 50) {
       const breakedTitle = title.slice(0, 50);
-      return breakedTitle;
+      return `${breakedTitle}...`;
     } else {
       return title;
     }
