@@ -25,3 +25,5 @@ export const Cards = (): ReactElement => {
     </>
   );
 };
+
+export { CardNews };
