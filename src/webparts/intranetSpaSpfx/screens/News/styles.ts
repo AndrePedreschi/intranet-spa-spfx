@@ -92,5 +92,4 @@ export const IconHeart = styled.img`
   width: 16px;
   height: 16px;
   cursor: pointer;
-  transition: filter 0.3s ease;
 `;

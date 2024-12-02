@@ -32,7 +32,7 @@ export const FooterLinks = styled.div`
   }
 `;
 
-export const Link = styled.a<{ isActive?: boolean }>`
+export const Link = styled.a`
   position: relative;
   color: #ffffff;
   text-decoration: none;

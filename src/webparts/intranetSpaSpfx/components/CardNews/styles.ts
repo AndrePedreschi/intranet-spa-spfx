@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export const CardNews = styled.div`
+export const CardWrapper = styled.div`
   max-width: 350px;
   max-height: 400px;
   display: flex;
@@ -14,7 +14,7 @@ export const CardNews = styled.div`
     max-height: inherit;
   }
 `;
-export const Banner = styled.img`
+export const BannerWrapper = styled.img`
   width: 100%;
   max-width: 350px;
   height: 150px;
@@ -27,14 +27,14 @@ export const Banner = styled.img`
   }
 `;
 
-export const TitleNews = styled.h1`
+export const TitleWrapper = styled.h1`
   font-size: 1rem;
   padding: 0 0.5rem;
   line-height: auto;
   color: #323232;
 `;
 
-export const Typography = styled.p`
+export const InfoWrapper = styled.p`
   width: 100%;
   display: flex;
   justify-content: space-between;
@@ -47,9 +47,14 @@ export const Typography = styled.p`
     gap: 0.5rem;
   }
 `;
-export const TypographyText = styled.p`
+export const DescriptionWrapper = styled.p`
   font-size: 0.75rem;
   padding: 0 0.5rem;
   color: #6f6f6f;
   line-height: 1rem;
+`;
+export const IconHeartWrapper = styled.img`
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 `;

@@ -1,22 +1,18 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { Link, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
 import {
-  Banner,
   ButtonBack,
-  CardNews,
   ContainerNews,
   DoubleArrow,
   IconHeart,
   ReturnLink,
-  TitleNews,
-  Typography,
-  TypographyText,
 } from "./styles";
 import doubleArrow from "../../assets/double-arrow.svg";
 import likedHeart from "../../assets/heart-liked.svg";
 import iconHeart from "../../assets/icon-heart.svg";
+import { CardNews } from "../../components/CardNews";
 import {
   getNewsListPaginated,
   TGetNewsListResponse,
@@ -59,39 +55,6 @@ export const News = (): ReactElement => {
     [context],
   );
 
-  function breakDescription(description: string, id: number): JSX.Element {
-    if (description.length > 90) {
-      const breakedDescription = description.slice(0, 90);
-      return (
-        <>
-          {breakedDescription}
-          {"... "}
-          <Link
-            to={`/internalNews/${id}`}
-            style={{ color: "blue", textDecoration: "underline" }}
-          >
-            Leia Mais
-          </Link>
-        </>
-      );
-    }
-    return <>{description}</>;
-  }
-
-  function parseLikes(likes: string) {
-    try {
-      const likesParsed: number[] = JSON.parse(likes || "[]");
-      return likesParsed.length;
-    } catch (error) {
-      console.error("Erro ao processar os likes:", error);
-      return 0;
-    }
-  }
-
-  function formateDate(date: string) {
-    return date.split("T")[0].split("-").reverse().join("/");
-  }
-
   async function handleLike(newsId: number) {
     if (!likedNews.includes(newsId)) {
       setLikedNews([...likedNews, newsId]);
@@ -120,29 +83,27 @@ export const News = (): ReactElement => {
       <ContainerNews>
         {listNews &&
           listNews.map((item) => (
-            <CardNews key={item.Id || item.Title}>
-              <Banner src={item.LinkBanner}></Banner>
-              <TitleNews>{item.Title}</TitleNews>
-              <Typography>
-                {formateDate(item.Created)}
-                <div>
-                  <IconHeart
-                    src={
-                      item.Likes && user && item.Likes.includes(user)
-                        ? likedHeart
-                        : iconHeart
-                    }
-                    alt="heart"
-                    liked={item.Likes && user && item.Likes.includes(user)}
-                    onClick={() => handleLike(item.Id)}
-                  />
-                  {parseLikes(item.Likes)} Likes <p>{item.Views} Views</p>
-                </div>
-              </Typography>
-              <TypographyText>
-                {breakDescription(item.Descricao, item.Id)}
-              </TypographyText>
-            </CardNews>
+            <CardNews
+              key={item.Id || item.Title}
+              id={item.Id}
+              bannerContent={item.LinkBanner}
+              title={item.Title}
+              date={item.Created}
+              likes={item.Likes}
+              views={item.Views}
+              description={item.Descricao}
+              iconHeart={
+                <IconHeart
+                  src={
+                    item.Likes && user && item.Likes.includes(user)
+                      ? likedHeart
+                      : iconHeart
+                  }
+                  alt="heart"
+                  onClick={() => handleLike(item.Id)}
+                />
+              }
+            ></CardNews>
           ))}
       </ContainerNews>
     </>
