@@ -13,6 +13,29 @@ export type TGetFooterListResponse = {
 
 const urlSite = useZustandStore.getState().urlSite;
 
+/**
+ * Obtém os itens da lista 'Footer' no SharePoint.
+ *
+ * @param {WebPartContext} context - O contexto do web part do SharePoint, necessário para realizar requisições HTTP.
+ * @returns {Promise<TGetFooterListResponse[]>} - Uma promessa que resolve em um array de itens da lista 'Footer'.
+ * @throws {Error} - Lança um erro se a requisição falhar ou a resposta não for válida.
+ *
+ * @example
+ * ```typescript
+ * import { getFooterList } from './services/getFooterList';
+ * import { WebPartContext } from '@microsoft/sp-webpart-base';
+ *
+ * // Exemplo de uso em um componente
+ * async function fetchFooterItems(context: WebPartContext) {
+ *   try {
+ *     const footerItems = await getFooterList(context);
+ *     console.log('Itens do Footer:', footerItems);
+ *   } catch (error) {
+ *     console.error('Erro ao buscar itens da lista Footer:', error);
+ *   }
+ * }
+ * ```
+ */
 export const getFooterList = async (
   context: WebPartContext,
 ): Promise<TGetFooterListResponse[]> => {
