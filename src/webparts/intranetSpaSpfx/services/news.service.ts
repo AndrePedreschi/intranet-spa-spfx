@@ -358,6 +358,30 @@ export const updateNewsLikes = async (
   }
 };
 
+/**
+ * Atualiza as informações de curtidas e visualizações de uma notícia na lista 'Noticias' do SharePoint.
+ *
+ * @param {WebPartContext} context - O contexto do web part do SharePoint, necessário para realizar requisições HTTP.
+ * @param {number} newsId - O ID da notícia a ser atualizada.
+ * @returns {Promise<{ likes: number; views: number }>} - Uma promessa que resolve com o número atualizado de curtidas e visualizações da notícia.
+ * @throws {Error} - Lança um erro se a requisição falhar em obter ou atualizar os dados da notícia.
+ *
+ * @example
+ * ```typescript
+ * import { updateNewsLikesAndViews } from './services/updateNewsLikesAndViews';
+ * import { WebPartContext } from '@microsoft/sp-webpart-base';
+ *
+ * async function handleNewsInteraction(context: WebPartContext, newsId: number) {
+ *   try {
+ *     const { likes, views } = await updateNewsLikesAndViews(context, newsId);
+ *     console.log(`Notícia atualizada! Curtidas: ${likes}, Visualizações: ${views}`);
+ *   } catch (error) {
+ *     console.error('Erro ao atualizar curtidas e visualizações:', error);
+ *   }
+ * }
+ * ```
+ */
+
 export const updateNewsLikesAndViews = async (
   context: WebPartContext,
   newsId: number,

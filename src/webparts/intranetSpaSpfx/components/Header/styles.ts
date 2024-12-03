@@ -33,7 +33,7 @@ export const NavLinks = styled.div`
   }
 `;
 
-export const Link = styled.a<{ isActive?: boolean }>`
+export const Link = styled.a<{ $isActive?: boolean }>`
   position: relative;
   color: #000000;
   text-decoration: none;
@@ -48,7 +48,7 @@ export const Link = styled.a<{ isActive?: boolean }>`
     content: "";
     position: absolute;
     display: block;
-    width: ${(props) => (props.isActive ? "100%" : "0")};
+    width: ${(props) => (props.$isActive ? "100%" : "0")};
     height: 2px;
     background-color: #fe202d;
     bottom: -5px;

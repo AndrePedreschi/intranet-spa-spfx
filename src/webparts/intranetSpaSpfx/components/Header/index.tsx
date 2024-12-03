@@ -1,5 +1,7 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
+import { useLocation } from "react-router-dom";
+
 import { NavBar, Logo, NavLinks, Link } from "./styles";
 import {
   getHeaderList,
@@ -12,6 +14,7 @@ export const Header = (): ReactElement => {
   const { context } = useZustandStore();
   const [list, setList] = useState<TGetHeaderListResponse[]>();
   const [logo, setLogo] = useState<TGetImagesList[]>();
+  const location = useLocation();
 
   const getData = useCallback(async () => {
     if (!context) return;
@@ -38,7 +41,9 @@ export const Header = (): ReactElement => {
             list.map((item) => (
               <Link
                 key={item.Title}
-                isActive={location.href === item.Hyperlink.Url}
+                $isActive={
+                  item.Title === "Notícias" && location.pathname === "/news"
+                }
                 href={item.Hyperlink.Url}
               >
                 {item.Title}
