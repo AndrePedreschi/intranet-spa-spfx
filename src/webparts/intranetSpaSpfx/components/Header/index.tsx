@@ -38,7 +38,7 @@ export const Header = (): ReactElement => {
             list.map((item) => (
               <Link
                 key={item.Title}
-                isActive={location.href === item.Hyperlink.Url}
+                $isActive={location.href === item.Hyperlink.Url}
                 href={item.Hyperlink.Url}
               >
                 {item.Title}

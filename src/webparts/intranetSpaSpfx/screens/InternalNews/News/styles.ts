@@ -8,16 +8,16 @@ export const Container = styled.div`
   h1 {
     color: #323232;
     font-size: 1.25rem;
-    font-family: "Poppins";
+    font-family: "Poppins", sans-serif;
     font-weight: 600;
   }
   p {
     color: #323232;
     font-size: 1rem;
-    font-family: "Roboto";
+    font-family: "Roboto", sans-serif;
   }
   hr {
-    color: #eeeeee;
+    border-top: 1px solid #eeeeee;
   }
 `;
 export const LoadingContainer = styled.div`
@@ -33,17 +33,19 @@ export const CommentContainer = styled.div`
 `;
 
 export const CommentSection = styled.section`
-  //border: 1px solid #eeeeee;
-  border: 1px solid red;
+  border: 1px solid #eeeeee;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  -webkit-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
+  -moz-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
+  box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
 `;
 
 export const Comment = styled.div`
   padding: 1rem;
-  border-bottom: 1px solid red;
+  border-bottom: 1px solid #eeeeee;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -55,15 +57,11 @@ export const SubCommentsContainer = styled.div`
   gap: 1.5rem;
 `;
 export const SubCommentSection = styled.section`
-  padding-left: 1rem;
+  border-top: 1px solid #eeeeee;
+  padding: 1rem 0 0 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-`;
-
-export const LikesSection = styled.section`
-  display: flex;
-  gap: 1rem;
 `;
 
 export const UserSection = styled.section`
@@ -95,13 +93,13 @@ export const UserData = styled.section`
 
   h1 {
     font-size: 0.75rem;
-    font-family: "Poppins";
+    font-family: "Poppins", sans-serif;
     color: #323232;
     font-weight: 600;
   }
   p {
     font-size: 0.75rem;
-    //font-family:;
+    font-family: "Roboto", sans-serif;
     color: #6f6f6f;
   }
 `;

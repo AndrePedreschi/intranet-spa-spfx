@@ -4,7 +4,8 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { useZustandStore } from "../store";
 
 export type TGetSubCommentsListResponse = {
-  Id: number;
+  user: import("c:/Users/Andre Rabelo/Desktop/IT-Lean/8 - SPA-Exemple/intranet-spa-spfx/src/webparts/intranetSpaSpfx/services/user.service").TGetUserResponse;
+  Id?: number;
   IdComentario: number;
   SubComentario: string;
   Created: string;

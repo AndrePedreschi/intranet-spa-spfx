@@ -4,19 +4,26 @@ import { useHistory } from "react-router-dom";
 
 import { MostViewed } from "./MostViewed";
 import { News } from "./News";
-import { Container, Back, Section } from "./styles";
+import {
+  Container,
+  Section,
+  ReturnLink,
+  ButtonBack,
+  DoubleArrow,
+} from "./styles";
+import doubleArrow from "../../assets/double-arrow.svg";
 
 export function InternalNews(): ReactElement {
   const history = useHistory();
 
   return (
     <Container>
-      <Back onClick={history.goBack}>
-        <div>
-          <p>{"<<"}</p>
-          <p>Voltar</p>
-        </div>
-      </Back>
+      <ReturnLink>
+        <ButtonBack onClick={() => history.goBack()}>
+          <DoubleArrow src={doubleArrow} alt="arrow" />
+          Voltar
+        </ButtonBack>
+      </ReturnLink>
 
       <Section>
         <News />

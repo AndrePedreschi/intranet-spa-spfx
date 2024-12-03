@@ -275,8 +275,19 @@ export const updateNewsViews = async (
 
   const responseJson = await getItemResponse.json();
 
+  let viewedUsers: number[] = JSON.parse(responseJson.ViewedUsers);
+  const user: number = context.pageContext.legacyPageContext.userId;
+
+  if (viewedUsers === null) {
+    viewedUsers = [];
+    viewedUsers.push(user);
+  } else if (!viewedUsers.find((userId: number) => userId === user)) {
+    viewedUsers.push(user);
+  }
+
   const body = JSON.stringify({
     Views: responseJson.Views + 1,
+    ViewedUsers: JSON.stringify(viewedUsers),
   });
 
   const headers = {
@@ -327,16 +338,16 @@ export const updateNewsLikes = async (
 
   const responseJson = await getItemResponse.json();
 
-  const user: string = context.pageContext.legacyPageContext.userId;
-  let likes: string[] = JSON.parse(responseJson.Likes);
+  const user: number = context.pageContext.legacyPageContext.userId;
+  let likes: number[] = JSON.parse(responseJson.Likes);
 
   if (likes === null) {
     likes = [];
     likes.push(user);
-  } else if (!likes.find((userId: string) => userId === user)) {
+  } else if (!likes.find((userId: number) => userId === user)) {
     likes.push(user);
   } else {
-    likes = likes.filter((userId: string) => userId !== user);
+    likes = likes.filter((userId: number) => userId !== user);
   }
 
   const body = JSON.stringify({
