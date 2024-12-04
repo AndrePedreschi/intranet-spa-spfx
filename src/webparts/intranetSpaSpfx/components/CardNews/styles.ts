@@ -14,7 +14,16 @@ export const CardWrapper = styled.div`
     max-height: inherit;
   }
 `;
-export const BannerWrapper = styled.img`
+export const BannerWrapper = styled.section`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 350px;
+  height: 150px;
+`;
+
+export const Banner = styled.img`
   width: 100%;
   max-width: 350px;
   height: 150px;

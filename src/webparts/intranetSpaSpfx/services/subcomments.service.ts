@@ -1,8 +1,11 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetSubCommentsListResponse = {
-  Id: number;
+  user: import("c:/Users/Andre Rabelo/Desktop/IT-Lean/8 - SPA-Exemple/intranet-spa-spfx/src/webparts/intranetSpaSpfx/services/user.service").TGetUserResponse;
+  Id?: number;
   IdComentario: number;
   SubComentario: string;
   Created: string;
@@ -14,6 +17,7 @@ export type TRequestBody = {
   SubComentario: string;
 };
 
+const urlSite = useZustandStore.getState().urlSite;
 /**
  * Obtém a lista de subcomentários associada a um comentário específico no SharePoint.
  *
@@ -46,8 +50,8 @@ export type TRequestBody = {
 export const getSubCommentsList = async (
   context: WebPartContext,
   commentId: number,
-): Promise<TGetSubCommentsListResponse> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('SubComentarios')/items`;
+): Promise<TGetSubCommentsListResponse[]> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items`;
   const select = `?$select=Id,IdComentario,SubComentario,Created,AuthorId`;
   const filter = `$filter=IdComentario eq ${commentId}`;
   const orderBy = `&$orderby=Created asc`;
@@ -88,7 +92,7 @@ export const postNewSubComment = async (
   context: WebPartContext,
   requestBody: TRequestBody,
 ): Promise<{ msg: string }> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('SubComentarios')/items`;
+  const url = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items`;
 
   const body = JSON.stringify(requestBody);
 
