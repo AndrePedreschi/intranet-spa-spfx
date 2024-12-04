@@ -33,7 +33,7 @@ import {
   getSubCommentsList,
   TGetSubCommentsListResponse,
   postNewSubComment,
-} from "../../../services/subComments.service";
+} from "../../../services/subcomments.service";
 import { getUser, TGetUserResponse } from "../../../services/user.service";
 import { useZustandStore } from "../../../store";
 import { formatDate } from "../../../utils/formatDate";
