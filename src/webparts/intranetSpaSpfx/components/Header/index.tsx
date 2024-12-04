@@ -45,7 +45,9 @@ export const Header = (): ReactElement => {
     <>
       <NavBar>
         {logo && (
-          <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
+          <Link to={"/"}>
+            <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
+          </Link>
         )}
         <NavLinks>
           {headerList &&

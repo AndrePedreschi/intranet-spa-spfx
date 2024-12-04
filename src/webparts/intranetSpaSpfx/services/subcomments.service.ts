@@ -2,9 +2,10 @@ import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 import { useZustandStore } from "../store";
+import { TGetUserResponse } from "./user.service";
 
 export type TGetSubCommentsListResponse = {
-  user: import("c:/Users/Andre Rabelo/Desktop/IT-Lean/8 - SPA-Exemple/intranet-spa-spfx/src/webparts/intranetSpaSpfx/services/user.service").TGetUserResponse;
+  user: TGetUserResponse;
   Id?: number;
   IdComentario: number;
   SubComentario: string;

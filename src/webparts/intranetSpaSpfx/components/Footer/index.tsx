@@ -47,7 +47,9 @@ export const Footer = (): ReactElement => {
     <>
       <FooterContainer>
         {logo && (
-          <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
+          <Link to={"/"}>
+            <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
+          </Link>
         )}
         <FooterLinks>
           {footerList &&
