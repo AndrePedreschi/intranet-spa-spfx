@@ -2,17 +2,10 @@ import { ReactElement, useCallback, useEffect, useState } from "react";
 
 import { useHistory } from "react-router-dom";
 
-import {
-  ButtonBack,
-  ContainerNews,
-  DoubleArrow,
-  IconHeart,
-  ReturnLink,
-} from "./styles";
+import { ButtonBack, ContainerNews, DoubleArrow, ReturnLink } from "./styles";
 import doubleArrow from "../../assets/double-arrow.svg";
-import likedHeart from "../../assets/heart-liked.svg";
-import iconHeart from "../../assets/icon-heart.svg";
 import { CardNews } from "../../components/CardNews";
+import { LikeViews } from "../../components/LikeViews";
 import {
   getNewsListPaginated,
   TGetNewsListResponse,
@@ -21,11 +14,10 @@ import {
 import { useZustandStore } from "../../store";
 
 export const News = (): ReactElement => {
+  const [loading, setLoading] = useState<number>();
   const { context } = useZustandStore();
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
-  const [likedNews, setLikedNews] = useState<number[]>([]);
   const history = useHistory();
-  const user: string = context?.pageContext?.legacyPageContext.userId;
 
   const [, setParam] = useState("");
   const itemsPerPage = 25;
@@ -55,18 +47,21 @@ export const News = (): ReactElement => {
     [context],
   );
 
-  async function handleLike(newsId: number) {
-    if (!likedNews.includes(newsId)) {
-      setLikedNews([...likedNews, newsId]);
-      if (context) {
-        await updateNewsLikesAndViews(context, newsId);
-        getData();
-      }
-    } else {
-      setLikedNews(likedNews.filter((id) => id !== newsId));
-      getData();
+  const handleLike = async (dataReceived: {
+    id: number;
+    arrayLikes: string;
+  }) => {
+    if (!context) return;
+    try {
+      setLoading(dataReceived.id);
+
+      await updateNewsLikesAndViews(context, dataReceived.id);
+    } catch (error) {
+      console.error("Erro dar like em um comentário:", error);
     }
-  }
+
+    setLoading(undefined);
+  };
 
   useEffect(() => {
     getData();
@@ -82,28 +77,15 @@ export const News = (): ReactElement => {
       </ReturnLink>
       <ContainerNews>
         {listNews &&
-          listNews.map((item) => (
-            <CardNews
-              key={item.Id || item.Title}
-              id={item.Id}
-              bannerContent={item.LinkBanner}
-              title={item.Title}
-              date={item.Created}
-              likes={item.Likes}
-              views={item.Views}
-              description={item.Descricao}
-              iconHeart={
-                <IconHeart
-                  src={
-                    item.Likes && user && item.Likes.includes(user)
-                      ? likedHeart
-                      : iconHeart
-                  }
-                  alt="heart"
-                  onClick={() => handleLike(item.Id)}
-                />
-              }
-            ></CardNews>
+          listNews.map((news) => (
+            <CardNews key={news.Id} cardData={news}>
+              <LikeViews
+                likeLoadingControl={loading}
+                origin={"news"}
+                dataToLikeViews={news}
+                handleLike={(dataReceived) => handleLike(dataReceived)}
+              />
+            </CardNews>
           ))}
       </ContainerNews>
     </>

@@ -24,6 +24,10 @@ export const LoadingContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 80vh;
+  @media (max-width: 768px) {
+    min-height: 85vh;
+  }
 `;
 
 export const CommentContainer = styled.div`
@@ -62,6 +66,21 @@ export const SubCommentSection = styled.section`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  @keyframes subCommentAppear {
+    from {
+      opacity: 0;
+      transform: translate(-100px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(0px);
+    }
+  }
+
+  animation: subCommentAppear linear;
+  animation-timeline: view();
+  animation-range: entry 0%;
 `;
 
 export const UserSection = styled.section`

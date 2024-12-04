@@ -7,7 +7,7 @@ import { News } from "./News";
 import {
   Container,
   Section,
-  ReturnLink,
+  MostViewedSection,
   ButtonBack,
   DoubleArrow,
 } from "./styles";
@@ -18,16 +18,18 @@ export function InternalNews(): ReactElement {
 
   return (
     <Container>
-      <ReturnLink>
+      <section>
         <ButtonBack onClick={() => history.goBack()}>
           <DoubleArrow src={doubleArrow} alt="arrow" />
           Voltar
         </ButtonBack>
-      </ReturnLink>
+      </section>
 
       <Section>
         <News />
-        <MostViewed />
+        <MostViewedSection>
+          <MostViewed />
+        </MostViewedSection>
       </Section>
     </Container>
   );

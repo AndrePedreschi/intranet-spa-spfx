@@ -9,19 +9,19 @@ import { useZustandStore } from "../../store";
 import { Spinner } from "../Spinner";
 
 type TLikeViews = {
-  loadingControl: number | undefined;
+  likeLoadingControl?: number;
   origin: "news" | "comment";
-  dataToLike: TGetNewsListResponse | TGetCommentsListResponse;
+  dataToLikeViews: TGetNewsListResponse | TGetCommentsListResponse;
   showLike?: boolean;
   showViews?: boolean;
-  handleLike: (dataToSend: { id: number; arrayLikes: string }) => void;
+  handleLike?: (dataToSend: { id: number; arrayLikes: string }) => void;
 };
 
 export const LikeViews = ({
-  loadingControl,
+  likeLoadingControl,
   showLike = true,
   showViews = true,
-  dataToLike,
+  dataToLikeViews,
   origin,
   handleLike,
 }: TLikeViews): ReactElement => {
@@ -38,7 +38,7 @@ export const LikeViews = ({
 
   const likeSomething = async () => {
     const audio = new Audio(`/sites/SPA-Example/Sons/like.ogg`);
-    if (!id) return;
+    if (!id || !handleLike) return;
     if (likes.includes(user)) {
       const editedLikes = likes.filter((userId) => userId !== user);
       setLikes(editedLikes);
@@ -53,16 +53,16 @@ export const LikeViews = ({
   };
 
   useEffect(() => {
-    setLikes(JSON.parse(dataToLike.Likes || "[]"));
-    setId(dataToLike.Id);
-  }, [dataToLike]);
+    setLikes(JSON.parse(dataToLikeViews.Likes || "[]"));
+    setId(dataToLikeViews.Id);
+  }, [dataToLikeViews]);
 
   return (
     <Container>
       {showLike && (
         <LikesSection>
-          {(loadingControl === id && origin === "comment") ||
-          (loadingControl === id && origin === "news") ? (
+          {(likeLoadingControl === id && origin === "comment") ||
+          (likeLoadingControl === id && origin === "news") ? (
             <Spinner />
           ) : (
             <IconHeart
@@ -76,9 +76,9 @@ export const LikeViews = ({
           </p>
         </LikesSection>
       )}
-      {showViews && verifyType(dataToLike) && (
+      {showViews && verifyType(dataToLikeViews) && (
         <section>
-          <p>{dataToLike.Views} Views</p>
+          <p>{dataToLikeViews.Views} Views</p>
         </section>
       )}
     </Container>

@@ -9,6 +9,7 @@ export type TGetFooterListResponse = {
     Description: string;
     Url: string;
   };
+  Link: string;
 };
 
 const urlSite = useZustandStore.getState().urlSite;
@@ -40,7 +41,7 @@ export const getFooterList = async (
   context: WebPartContext,
 ): Promise<TGetFooterListResponse[]> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Footer')/items`;
-  const select = `?$select=Title,Hyperlinks`;
+  const select = `?$select=Title,Hyperlinks,Link`;
 
   const response = await context.spHttpClient.get(
     urlBase + select,

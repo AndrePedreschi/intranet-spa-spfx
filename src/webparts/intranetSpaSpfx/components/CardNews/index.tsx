@@ -1,45 +1,36 @@
-import { ReactElement } from "react";
+import { ReactElement, ReactNode } from "react";
 
 import { Link } from "react-router-dom";
 
 import {
   CardWrapper,
   BannerWrapper,
+  Banner,
   TitleWrapper,
   InfoWrapper,
   DescriptionWrapper,
 } from "./styles";
+import { TGetNewsListResponse } from "../../services/news.service";
 
-interface CardNewsProps {
-  id?: number;
-  bannerContent: string;
-  title: string;
-  date: string;
-  likes: string;
-  views: number;
-  description: string;
-  iconHeart?: React.ReactNode;
+interface ICardNewsProps {
+  cardData: TGetNewsListResponse;
+  children: ReactNode;
 }
 
 export const CardNews = ({
-  bannerContent,
-  title = "Título não disponível",
-  date,
-  likes = "",
-  views = 0,
-  description = "Descrição indisponível",
-  id,
-  iconHeart,
-}: CardNewsProps): ReactElement => {
+  cardData,
+  children,
+}: ICardNewsProps): ReactElement => {
   const breakDescription = (): ReactElement => {
+    const description = cardData.Descricao || "Descrição indisponível";
     if (description.length > 90) {
-      const breakedDescription = description.slice(0, 90);
+      const breakedDescription = cardData.Descricao.slice(0, 90);
       return (
         <>
           {breakedDescription}
           {"... "}
           <Link
-            to={`/internalNews/${id}`}
+            to={`/internalNews/${cardData.Id}`}
             style={{ color: "blue", textDecoration: "underline" }}
           >
             Leia Mais
@@ -47,43 +38,47 @@ export const CardNews = ({
         </>
       );
     }
-    return <>{description}</>;
+    return (
+      <>
+        {description}
+        {"  "}
+        <Link
+          to={`/internalNews/${cardData.Id}`}
+          style={{ color: "blue", textDecoration: "underline" }}
+        >
+          Leia Mais
+        </Link>
+      </>
+    );
   };
 
   const breakTitle = (): string => {
+    const title = cardData.Title || "Título não disponível";
     if (title.length > 50) {
-      const breakedTitle = title.slice(0, 50);
+      const breakedTitle = cardData.Title.slice(0, 50);
       return `${breakedTitle}...`;
     } else {
       return title;
     }
   };
 
-  const parseLikes = () => {
-    try {
-      const likesParsed: number[] = JSON.parse(likes || "[]");
-      return likesParsed.length;
-    } catch (error) {
-      console.error("Erro ao processar os likes:", error);
-      return 0;
-    }
-  };
-
-  const formateDate = () => {
+  const formateDate = (date: string) => {
     return date.split("T")[0].split("-").reverse().join("/");
   };
 
   return (
     <CardWrapper>
-      <BannerWrapper src={bannerContent} alt="banner"></BannerWrapper>
+      <BannerWrapper>
+        {cardData.LinkBanner ? (
+          <Banner src={cardData.LinkBanner} alt="banner" />
+        ) : (
+          <p>Sem imagem</p>
+        )}
+      </BannerWrapper>
       <TitleWrapper>{breakTitle()}</TitleWrapper>
       <InfoWrapper>
-        {formateDate()}
-        <div>
-          {iconHeart}
-          {parseLikes()} Likes
-          <p>{views} Views</p>
-        </div>
+        {formateDate(cardData.Created)}
+        {children}
       </InfoWrapper>
       <DescriptionWrapper>{breakDescription()}</DescriptionWrapper>
     </CardWrapper>

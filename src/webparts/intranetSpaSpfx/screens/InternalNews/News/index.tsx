@@ -97,7 +97,7 @@ export const News = (): ReactElement => {
     try {
       setLoading(dataReceived.id);
       await updateCommentLikes(context, dataReceived.id);
-      setNews((prevNews) => {
+      /* setNews((prevNews) => {
         if (!prevNews) return prevNews;
 
         const updatedComments = prevNews.Comments?.map((comment) =>
@@ -107,7 +107,7 @@ export const News = (): ReactElement => {
         );
 
         return { ...prevNews, Comments: updatedComments };
-      });
+      }); */
     } catch (error) {
       console.error("Erro dar like em um comentário:", error);
     }
@@ -124,10 +124,10 @@ export const News = (): ReactElement => {
 
       await updateNewsLikes(context, dataReceived.id);
 
-      setNews((prevNews) => {
+      /* setNews((prevNews) => {
         if (!prevNews) return prevNews;
         return { ...prevNews, Likes: dataReceived.arrayLikes };
-      });
+      }); */
     } catch (error) {
       console.error("Erro dar like em um comentário:", error);
     }
@@ -214,8 +214,8 @@ export const News = (): ReactElement => {
 
   return news ? (
     <Container>
-      <NewsImg src={news.LinkBanner} />
-      <h1>{news.Title}</h1>
+      {news.LinkBanner && <NewsImg src={news.LinkBanner} />}
+      <h1>{news.Title || "Título indisponível"}</h1>
       <UserSection>
         <UserImg $url={news.user?.UserImg} />
         <UserData>
@@ -223,11 +223,11 @@ export const News = (): ReactElement => {
           <p>{formatDate(news.Created)}</p>
         </UserData>
       </UserSection>
-      <p>{news.Descricao}</p>
+      <p>{news.Descricao || "Descrição indisponível"}</p>
       <LikeViews
-        loadingControl={loading}
+        likeLoadingControl={loading}
         origin={"news"}
-        dataToLike={news}
+        dataToLikeViews={news}
         handleLike={(dataReceived) => handleNewsLike(dataReceived)}
       />
 
@@ -252,9 +252,9 @@ export const News = (): ReactElement => {
                 <p>{comment.Comentario}</p>
                 <hr />
                 <LikeViews
-                  loadingControl={loading}
+                  likeLoadingControl={loading}
                   origin={"comment"}
-                  dataToLike={comment}
+                  dataToLikeViews={comment}
                   showViews={false}
                   handleLike={(dataReceived) => handleCommentLike(dataReceived)}
                 />

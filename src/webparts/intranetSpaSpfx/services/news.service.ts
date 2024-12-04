@@ -398,7 +398,7 @@ export const updateNewsLikes = async (
 export const updateNewsLikesAndViews = async (
   context: WebPartContext,
   newsId: number,
-): Promise<{ likes: number; views: number }> => {
+): Promise<void> => {
   const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
 
   const getItemResponse = await context.spHttpClient.get(
@@ -412,29 +412,28 @@ export const updateNewsLikesAndViews = async (
   }
 
   const responseJson = await getItemResponse.json();
-  const user: string = context.pageContext.legacyPageContext.userId;
+  const user: number = context.pageContext.legacyPageContext.userId;
 
   let updatedViews = responseJson.Views || 0;
-  let likes: string[] = JSON.parse(responseJson.Likes || "[]");
-  const viewedUsers: string[] = JSON.parse(responseJson.ViewedUsers || "[]");
+  let updatedLikes: number[] = JSON.parse(responseJson.Likes || "[]");
+  const viewedUsers: number[] = JSON.parse(responseJson.ViewedUsers || "[]");
 
-  if (!viewedUsers.includes(user)) {
-    viewedUsers.push(user);
-    updatedViews += 1;
-  }
-  if (!likes.includes(user)) {
-    likes.push(user);
+  if (!updatedLikes.includes(user)) {
+    updatedLikes.push(user);
+    if (!viewedUsers.includes(user)) {
+      viewedUsers.push(user);
+      updatedViews += 1;
+    }
   } else {
-    likes = likes.filter((userId: string) => userId !== user);
+    updatedLikes = updatedLikes.filter((userId: number) => userId !== user);
   }
-
-  const updatedLikes = likes.length;
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(likes),
+    Likes: JSON.stringify(updatedLikes),
     Views: updatedViews,
     ViewedUsers: JSON.stringify(viewedUsers),
   });
+
   const headers = {
     "X-HTTP-Method": "MERGE",
     "IF-MATCH": (responseJson as any)["@odata.etag"],
@@ -450,5 +449,4 @@ export const updateNewsLikesAndViews = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Likes and Views: ${errorText}`);
   }
-  return { likes: updatedLikes, views: updatedViews };
 };
