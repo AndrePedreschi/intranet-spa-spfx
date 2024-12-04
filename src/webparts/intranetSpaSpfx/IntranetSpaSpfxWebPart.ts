@@ -8,7 +8,7 @@ import {
 } from "@microsoft/sp-webpart-base";
 import * as ReactDom from "react-dom";
 
-import { faviconUrl } from "./assets/assets";
+//import { faviconUrl } from "./assets/assets";
 import { App } from "./routes";
 /* import {
   type IPropertyPaneConfiguration,
@@ -35,7 +35,7 @@ export default class IntranetSpaSpfxWebPart extends BaseClientSideWebPart<IIntra
   }
 
   protected async onInit(): Promise<void> {
-    const oldFavicon = document.getElementById("favicon");
+    /* const oldFavicon = document.getElementById("favicon");
     if (oldFavicon) {
       oldFavicon.style.display = "none";
       oldFavicon.remove();
@@ -45,7 +45,8 @@ export default class IntranetSpaSpfxWebPart extends BaseClientSideWebPart<IIntra
     newFavicon.type = "image/x-icon";
     newFavicon.rel = "shortcut icon";
     newFavicon.href = faviconUrl;
-    document.head.appendChild(newFavicon);
+    document.head.appendChild(newFavicon); */
+
     await super.onInit();
   }
 
