@@ -1,8 +1,8 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { useLocation, Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
-import { NavBar, Logo, NavLinks } from "./styles";
+import { NavBar, Logo, NavLinks, Link } from "./styles";
 import {
   getHeaderList,
   TGetHeaderListResponse,
@@ -12,30 +12,16 @@ import { useZustandStore } from "../../store";
 
 export const Header = (): ReactElement => {
   const { context } = useZustandStore();
-  const [headerList, setHeaderList] = useState<TGetHeaderListResponse[]>();
-  const [logo, setLogo] = useState<TGetImagesList>();
+  const [list, setList] = useState<TGetHeaderListResponse[]>();
+  const [logo, setLogo] = useState<TGetImagesList[]>();
   const location = useLocation();
-  const urlVerifyRegex = /^https:\/\//;
 
   const getData = useCallback(async () => {
     if (!context) return;
-    const headerListResponse = await getHeaderList(context);
-    setHeaderList(headerListResponse);
 
-    const logoList = await getImagesList(context);
-    const logo = logoList.find((item) => item.Name === "logo.png");
-    if (logo) setLogo(logo);
+    setList(await getHeaderList(context));
+    setLogo(await getImagesList(context));
   }, [context]);
-
-  const identifyActiveUrl = (title: string) => {
-    switch (title) {
-      case "Notícias":
-        return location.pathname === "/news" ? "isActive" : "";
-
-      default:
-        return "";
-    }
-  };
 
   useEffect(() => {
     getData();
@@ -44,31 +30,25 @@ export const Header = (): ReactElement => {
   return (
     <>
       <NavBar>
-        {logo && (
-          <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
-        )}
+        {logo &&
+          logo
+            .filter((item) => item.Name === "logo.png")
+            .map((item) => (
+              <Logo key={item.Name} src={item.ServerRelativeUrl} alt="Logo" />
+            ))}
         <NavLinks>
-          {headerList &&
-            headerList.map((headerItem) =>
-              !urlVerifyRegex.test(headerItem.Hyperlink.Description) ? (
-                <Link
-                  key={headerItem.Title}
-                  className={identifyActiveUrl(headerItem.Title)}
-                  to={{ pathname: headerItem.Hyperlink.Description }}
-                >
-                  {headerItem.Title}
-                </Link>
-              ) : (
-                <a
-                  key={headerItem.Title}
-                  href={headerItem.Hyperlink.Url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {headerItem.Title}
-                </a>
-              ),
-            )}
+          {list &&
+            list.map((item) => (
+              <Link
+                key={item.Title}
+                $isActive={
+                  item.Title === "Notícias" && location.pathname === "/news"
+                }
+                href={item.Hyperlink.Url}
+              >
+                {item.Title}
+              </Link>
+            ))}
         </NavLinks>
       </NavBar>
     </>
