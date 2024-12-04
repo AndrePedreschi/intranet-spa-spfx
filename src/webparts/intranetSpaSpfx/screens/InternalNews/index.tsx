@@ -17,7 +17,7 @@ export function InternalNews(): ReactElement {
   const history = useHistory();
 
   return (
-    <Container>
+    <Container className="screenTransitionControl">
       <section>
         <ButtonBack onClick={() => history.goBack()}>
           <DoubleArrow src={doubleArrow} alt="arrow" />
