@@ -68,7 +68,7 @@ export const News = (): ReactElement => {
   }, [getData]);
 
   return (
-    <>
+    <div className="screenTransitionControl">
       <ReturnLink>
         <ButtonBack onClick={() => history.goBack()}>
           <DoubleArrow src={doubleArrow} alt="arrow" />
@@ -88,6 +88,6 @@ export const News = (): ReactElement => {
             </CardNews>
           ))}
       </ContainerNews>
-    </>
+    </div>
   );
 };

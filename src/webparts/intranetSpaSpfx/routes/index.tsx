@@ -53,15 +53,17 @@ export function App({ context }: IIntranetSpaSpfxWebPartProps): ReactElement {
   }, [context, updateContext]);
 
   return (
-    <HashRouter>
-      <Header />
-      <Switch>
-        <Route path="/" exact component={Home} />
-        <Route path="/news" component={News} />
-        <Route path="/internalNews/:id" component={InternalNews} />
-        <Route path="*" component={NotFound} />
-      </Switch>
-      <Footer />
-    </HashRouter>
+    <main className="screenTransitionControl">
+      <HashRouter>
+        <Header />
+        <Switch>
+          <Route path="/" exact component={Home} />
+          <Route path="/news" component={News} />
+          <Route path="/internalNews/:id" component={InternalNews} />
+          <Route path="*" component={NotFound} />
+        </Switch>
+        <Footer />
+      </HashRouter>
+    </main>
   );
 }
