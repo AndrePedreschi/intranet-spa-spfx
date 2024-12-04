@@ -1,7 +1,11 @@
 import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
+import { useZustandStore } from "../store";
+
 export type TGetCommentsListResponse = {
+  user: import("c:/Users/Andre Rabelo/Desktop/IT-Lean/8 - SPA-Exemple/intranet-spa-spfx/src/webparts/intranetSpaSpfx/services/user.service").TGetUserResponse;
+  SubComments: import("c:/Users/Andre Rabelo/Desktop/IT-Lean/8 - SPA-Exemple/intranet-spa-spfx/src/webparts/intranetSpaSpfx/services/subComments.service").TGetSubCommentsListResponse[];
   Id: number;
   Likes: string;
   IdNoticia: number;
@@ -14,6 +18,8 @@ export type TRequestBody = {
   Comentario: string;
   IdNoticia: number;
 };
+
+const urlSite = useZustandStore.getState().urlSite;
 
 /**
  * Obtém a lista de comentários associada a uma notícia específica no SharePoint.
@@ -49,8 +55,8 @@ export type TRequestBody = {
 export const getCommentsList = async (
   context: WebPartContext,
   newsId: number,
-): Promise<TGetCommentsListResponse> => {
-  const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items`;
+): Promise<TGetCommentsListResponse[]> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
   const select = `?$select=Id,Likes,IdNoticia,Comentario,Created,AuthorId`;
   const filter = `$filter=IdNoticia eq ${newsId}`;
   const orderBy = `&$orderby=Created asc`;
@@ -92,7 +98,7 @@ export const postNewComment = async (
   context: WebPartContext,
   requestBody: TRequestBody,
 ): Promise<{ msg: string }> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
 
   const body = JSON.stringify(requestBody);
 
@@ -102,7 +108,7 @@ export const postNewComment = async (
   };
 
   const updateResponse = await context.spHttpClient.post(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
     { body: body, headers: headers },
   );
@@ -111,6 +117,7 @@ export const postNewComment = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Views: ${errorText}`);
   }
+
   return { msg: "Comentário enviado com sucesso!" };
 };
 
@@ -136,9 +143,9 @@ export const updateCommentLikes = async (
   context: WebPartContext,
   commentId: number,
 ): Promise<void> => {
-  const url = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
   const getItemResponse = await context.spHttpClient.get(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
   );
 
@@ -171,7 +178,7 @@ export const updateCommentLikes = async (
   };
 
   const updateResponse = await context.spHttpClient.post(
-    url,
+    urlBase,
     SPHttpClient.configurations.v1,
     { body: body, headers: headers },
   );
@@ -180,4 +187,28 @@ export const updateCommentLikes = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Views: ${errorText}`);
   }
+};
+
+export const getLastComment = async (
+  context: WebPartContext,
+  newsId: number,
+): Promise<TGetCommentsListResponse[]> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
+  const select = `?$select=Id,Likes,IdNoticia,Comentario,Created,AuthorId`;
+  const filter = `$filter=IdNoticia eq ${newsId}`;
+  const orderBy = `&$orderby=Created desc`;
+  const top = `&$top=1`;
+
+  const response = await context.spHttpClient.get(
+    `${urlBase}${select}${filter}${orderBy}${top}`,
+    SPHttpClient.configurations.v1,
+  );
+
+  if (!response || (response && !response.ok)) {
+    const responseText = await response.text();
+    throw new Error(responseText);
+  }
+
+  const responseJson = await response.json();
+  return responseJson.value;
 };
