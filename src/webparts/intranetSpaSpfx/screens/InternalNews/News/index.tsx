@@ -97,17 +97,6 @@ export const News = (): ReactElement => {
     try {
       setLoading(dataReceived.id);
       await updateCommentLikes(context, dataReceived.id);
-      /* setNews((prevNews) => {
-        if (!prevNews) return prevNews;
-
-        const updatedComments = prevNews.Comments?.map((comment) =>
-          comment.Id === dataReceived.id
-            ? { ...comment, Likes: dataReceived.arrayLikes }
-            : comment,
-        );
-
-        return { ...prevNews, Comments: updatedComments };
-      }); */
     } catch (error) {
       console.error("Erro dar like em um comentário:", error);
     }
@@ -123,11 +112,6 @@ export const News = (): ReactElement => {
       setLoading(dataReceived.id);
 
       await updateNewsLikes(context, dataReceived.id);
-
-      /* setNews((prevNews) => {
-        if (!prevNews) return prevNews;
-        return { ...prevNews, Likes: dataReceived.arrayLikes };
-      }); */
     } catch (error) {
       console.error("Erro dar like em um comentário:", error);
     }
@@ -145,8 +129,6 @@ export const News = (): ReactElement => {
 
       const currentUser = await getUser(context, currentUserId);
 
-      //obs: o subcomentário podemos utilizar essa técnica de enviar os dados e atualizar os dados localmente, para não fazer outra chamada da lista de subcomentários.
-      //isso só é possível pois não utilizamos o id do subcomentário
       setNews((prevNews) => {
         if (!prevNews) return prevNews;
         const updatedComments = prevNews.Comments?.map((comment) => {
