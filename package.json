@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@fluentui/react": "^8.106.4",
-    "@hookform/resolvers": "^3.9.1",
     "@microsoft/sp-component-base": "1.20.0",
     "@microsoft/sp-core-library": "1.20.0",
     "@microsoft/sp-lodash-subset": "1.20.0",
@@ -27,12 +26,10 @@
     "cz-conventional-changelog": "^3.3.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "react-hook-form": "^7.53.2",
     "react-router-dom": "^5.3.4",
     "styled-components": "^6.1.13",
     "swiper": "^11.1.14",
     "tslib": "2.3.1",
-    "zod": "^3.23.8",
     "zustand": "^4.5.5"
   },
   "devDependencies": {

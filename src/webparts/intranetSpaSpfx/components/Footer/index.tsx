@@ -1,10 +1,9 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { Link } from "react-router-dom";
-
 import {
   FooterContainer,
   FooterLinks,
+  Link,
   Logo,
   RightsContainer,
   RightsReserved,
@@ -18,19 +17,14 @@ import { useZustandStore } from "../../store";
 
 export const Footer = (): ReactElement => {
   const { context } = useZustandStore();
-  const [footerList, setFooterList] = useState<TGetFooterListResponse[]>();
-  const [logo, setLogo] = useState<TGetImagesList>();
-  const urlVerifyRegex = /^https:\/\//;
+  const [list, setList] = useState<TGetFooterListResponse[]>();
+  const [logo, setLogo] = useState<TGetImagesList[]>();
 
   const getData = useCallback(async () => {
     if (!context) return;
 
-    const logoList = await getImagesList(context);
-    const logo = logoList.find((item) => item.Name === "logo-branco.png");
-    if (logo) setLogo(logo);
-
-    const footerListResponse = await getFooterList(context);
-    setFooterList(footerListResponse);
+    setList(await getFooterList(context));
+    setLogo(await getImagesList(context));
   }, [context]);
 
   function getDate(): string {
@@ -46,30 +40,23 @@ export const Footer = (): ReactElement => {
   return (
     <>
       <FooterContainer>
-        {logo && (
-          <Logo key={logo.Name} src={logo.ServerRelativeUrl} alt="Logo" />
-        )}
+        {logo &&
+          logo
+            .filter((item) => item.Name === "logo-branco.png")
+            .map((item) => (
+              <Logo key={item.Name} src={item.ServerRelativeUrl} alt="Logo" />
+            ))}
         <FooterLinks>
-          {footerList &&
-            footerList.map((footerItem) =>
-              !urlVerifyRegex.test(footerItem.Hyperlinks.Description) ? (
-                <Link
-                  key={footerItem.Title}
-                  to={{ pathname: footerItem.Hyperlinks.Description }}
-                >
-                  {footerItem.Title}
-                </Link>
-              ) : (
-                <a
-                  key={footerItem.Title}
-                  href={footerItem.Hyperlinks.Url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {footerItem.Title}
-                </a>
-              ),
-            )}
+          {list &&
+            list.map((item) => (
+              <Link
+                key={item.Title}
+                isActive={location.href === item.Hyperlinks.Url}
+                href={item.Hyperlinks.Url}
+              >
+                {item.Title}
+              </Link>
+            ))}
         </FooterLinks>
       </FooterContainer>
       <RightsContainer>

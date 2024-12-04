@@ -15,7 +15,6 @@ export const NavBar = styled.nav`
     height: 8vh;
   }
 `;
-
 export const Logo = styled.img`
   width: 14vh;
   max-width: 144px;
@@ -32,24 +31,30 @@ export const NavLinks = styled.div`
   @media (max-width: 767px) {
     gap: 0.625rem;
   }
+`;
 
-  a {
-    position: relative;
-    color: #000000;
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s;
+export const Link = styled.a<{ $isActive?: boolean }>`
+  position: relative;
+  color: #000000;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.3s;
 
-    &:hover {
-      color: #fe202d;
-    }
-
-    @media (max-width: 767px) {
-      font-size: 0.75rem;
-    }
+  &:hover {
+    color: #fe202d;
   }
-  .isActive {
-    width: 100%;
-    border-bottom: 2px solid #fe202d;
+
+  &::after {
+    content: "";
+    position: absolute;
+    display: block;
+    width: ${(props) => (props.$isActive ? "100%" : "0")};
+    height: 2px;
+    background-color: #fe202d;
+    bottom: -5px;
+    left: 0;
+  }
+  @media (max-width: 767px) {
+    font-size: 0.75rem;
   }
 `;

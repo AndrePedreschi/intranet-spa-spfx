@@ -16,7 +16,6 @@
     "noImplicitAny": true,
     "typeRoots": ["./node_modules/@types", "./node_modules/@microsoft"],
     "types": ["webpack-env"],
-    "strict": true,
     "lib": [
       "es2015",
       "dom"
