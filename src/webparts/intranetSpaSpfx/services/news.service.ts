@@ -4,7 +4,7 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 export type TGetNewsListResponse = {
   Id: number;
   Title: string;
-  Likes: string;
+  LikedUsers: string | number[] | null;
   Views: number;
   LinkBanner: string;
   Descricao: string;
@@ -31,7 +31,7 @@ export const getMostViewedNewsList = async (
   amountOfNews: number,
 ): Promise<TGetNewsListResponse[]> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const orderBy = `&$orderby=Views desc`;
   const top = `&$top=${amountOfNews}`;
 
@@ -70,7 +70,7 @@ export const getNewsById = async (
   newsId: number,
 ): Promise<TGetNewsListResponse> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
-  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
 
   const response = await context.spHttpClient.get(
     `${urlBase}${select}`,
@@ -135,7 +135,7 @@ export const getNewsListPaginated = async (
   skipToken?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
   const urlBase = `${context.pageContext?.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=ID,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
   const skipTokenParam = skipToken
     ? `&$skiptoken=${skipToken.replace("&", "%26")}`
@@ -209,7 +209,7 @@ export const getNewsListPaginatedSimple = async (
   nextUrl?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=ID,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
 
   const dataUrl = `${urlBase}${select}${top}`;
@@ -295,17 +295,17 @@ export const updateNewsViews = async (
 };
 
 /**
- * Atualiza a lista de "likes" de uma notícia no SharePoint, adicionando ou removendo o usuário atual da lista de curtidas.
+ * Atualiza a lista de "LikedUsers" de uma notícia no SharePoint, adicionando ou removendo o usuário atual da lista de curtidas.
  *
  * Este método verifica se o usuário atual já curtiu a notícia. Caso já tenha curtido, ele remove o usuário da lista de curtidas. Se não, o usuário é adicionado à lista.
  *
  * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
- * @param {number} newsId - O ID da notícia cujos "likes" devem ser atualizados.
+ * @param {number} newsId - O ID da notícia cujos "LikedUsers" devem ser atualizados.
  * @returns {Promise<void>} Uma promessa que resolve quando a operação de atualização for concluída com sucesso.
- * @throws {Error} Lança um erro se a requisição falhar em qualquer momento (ao recuperar o item ou ao atualizar os "likes").
+ * @throws {Error} Lança um erro se a requisição falhar em qualquer momento (ao recuperar o item ou ao atualizar os "LikedUsers").
  *
  * @example
- * await updateNewsLikes(context, 123);
+ * await updateNewsLikedUsers(context, 123);
  * // A função tentará adicionar ou remover o "like" do usuário atual para a notícia com ID 123.
  */
 export const updateNewsLikes = async (
@@ -326,7 +326,7 @@ export const updateNewsLikes = async (
   const responseJson = await getItemResponse.json();
 
   const user: string = context.pageContext.legacyPageContext.userId;
-  let likes: string[] = JSON.parse(responseJson.Likes);
+  let likes: string[] = JSON.parse(responseJson.LikedUsers);
 
   if (likes === null) {
     likes = [];
@@ -338,7 +338,7 @@ export const updateNewsLikes = async (
   }
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(likes),
+    LikedUsers: JSON.stringify(likes),
   });
 
   const headers = {
@@ -402,7 +402,7 @@ export const updateNewsLikesAndViews = async (
   const user: string = context.pageContext.legacyPageContext.userId;
 
   let updatedViews = responseJson.Views || 0;
-  let likes: string[] = JSON.parse(responseJson.Likes || "[]");
+  let likes: string[] = JSON.parse(responseJson.LikedUsers || "[]");
   const viewedUsers: string[] = JSON.parse(responseJson.ViewedUsers || "[]");
 
   if (!viewedUsers.includes(user)) {
@@ -418,7 +418,7 @@ export const updateNewsLikesAndViews = async (
   const updatedLikes = likes.length;
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(likes),
+    LikedUsers: JSON.stringify(likes),
     Views: updatedViews,
     ViewedUsers: JSON.stringify(viewedUsers),
   });

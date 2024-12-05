@@ -22,10 +22,9 @@ import { useZustandStore } from "../../store";
 
 export const News = (): ReactElement => {
   const { context } = useZustandStore();
-  const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
-  const [likedNews, setLikedNews] = useState<number[]>([]);
+  const [listNews, setListNews] = useState<TGetNewsListResponse[]>([]);
   const history = useHistory();
-  const user: string = context?.pageContext?.legacyPageContext.userId;
+  const user: number = context?.pageContext?.legacyPageContext.userId || 0;
 
   const [, setParam] = useState("");
   const itemsPerPage = 25;
@@ -45,8 +44,17 @@ export const News = (): ReactElement => {
           } else {
             console.log("Final da lista");
           }
+          const normalizedData = data.map((item) => ({
+            ...item,
+            LikedUsers:
+              typeof item.LikedUsers === "string"
+                ? item.LikedUsers.split(",").map(Number)
+                : Array.isArray(item.LikedUsers)
+                  ? item.LikedUsers
+                  : [],
+          }));
 
-          setListNews(data);
+          setListNews(normalizedData);
         } catch (error) {
           console.error("Erro ao buscar dados paginados:", error);
         }
@@ -54,19 +62,33 @@ export const News = (): ReactElement => {
     },
     [context],
   );
-
-  async function handleLike(newsId: number) {
-    if (!likedNews.includes(newsId)) {
-      setLikedNews([...likedNews, newsId]);
-      if (context) {
-        await updateNewsLikesAndViews(context, newsId);
-        getData();
-      }
-    } else {
-      setLikedNews(likedNews.filter((id) => id !== newsId));
-      getData();
+  //Funcional sem a utilização do getData(). Entretanto, é necessário remover o "[]" da prop Likes na lista de Sharepoint. Alteração da prop Likes de string para array de strings na tipagem TGetNewsListResponse.
+  const handleLike = (newsId: number) => {
+    setListNews((prevListNews) =>
+      prevListNews.map((item) => {
+        if (item.Id === newsId) {
+          const isLiked =
+            Array.isArray(item.LikedUsers) && item.LikedUsers.includes(user);
+          const updatedLikes = isLiked
+            ? Array.isArray(item.LikedUsers)
+              ? item.LikedUsers.filter((id) => id !== user)
+              : []
+            : Array.isArray(item.LikedUsers)
+              ? [...item.LikedUsers, user]
+              : [user];
+          return { ...item, LikedUsers: updatedLikes };
+        }
+        return item;
+      }),
+    );
+    if (context) {
+      updateNewsLikesAndViews(context, newsId);
     }
-  }
+  };
+
+  useEffect(() => {
+    console.log("listNews", listNews);
+  }, [listNews]);
 
   useEffect(() => {
     getData();
@@ -89,13 +111,17 @@ export const News = (): ReactElement => {
               bannerContent={item.LinkBanner}
               title={item.Title}
               date={item.Created}
-              likes={item.Likes}
+              likes={
+                Array.isArray(item.LikedUsers) ? item.LikedUsers.length : 0
+              }
               views={item.Views}
               description={item.Descricao}
               iconHeart={
                 <IconHeart
                   src={
-                    item.Likes && user && item.Likes.includes(user)
+                    Array.isArray(item.LikedUsers) &&
+                    user &&
+                    item.LikedUsers.includes(user)
                       ? likedHeart
                       : iconHeart
                   }

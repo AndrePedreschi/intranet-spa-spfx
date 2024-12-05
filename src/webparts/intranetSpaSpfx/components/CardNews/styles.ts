@@ -5,6 +5,7 @@ export const CardWrapper = styled.div`
   max-height: 400px;
   display: flex;
   flex-direction: column;
+  margin: auto;
   border: 1px solid #eeeeee;
   border-radius: 0.5rem;
   gap: 1rem;
@@ -14,11 +15,12 @@ export const CardWrapper = styled.div`
     max-height: inherit;
   }
 `;
-export const BannerWrapper = styled.img`
+export const BannerWrapper = styled.div<{ $image: string }>`
   width: 100%;
   max-width: 350px;
   height: 150px;
   max-height: 150px;
+  background-image: url(${(props) => props.$image});
   background-size: cover;
   border-radius: 0.5rem 0.5rem 0 0;
   @media (max-width: 767px) {
@@ -52,9 +54,4 @@ export const DescriptionWrapper = styled.p`
   padding: 0 0.5rem;
   color: #6f6f6f;
   line-height: 1rem;
-`;
-export const IconHeartWrapper = styled.img`
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
 `;
