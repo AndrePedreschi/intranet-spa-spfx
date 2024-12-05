@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect, useState, useCallback } from "react";
 import {
   NewsContainer,
   MainNews,
@@ -7,8 +7,12 @@ import {
   UserInfo,
   Stats,
 } from "./styles";
+import {
+  getNewsListPaginated,
+  TGetNewsListResponse,
+} from "../../../services/news.service";
+import { useZustandStore } from "../../../store";
 
-// Função para limitar o texto com "..."
 const truncateText = (text: string, maxLength: number): string => {
   if (text.length > maxLength) {
     return text.slice(0, maxLength) + "...";
@@ -17,51 +21,66 @@ const truncateText = (text: string, maxLength: number): string => {
 };
 
 export const CardNewsHome = (): ReactElement => {
-  const description =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a nunc sed justo fringilla tempus. Curabitur finibus porta sodales. Cras hendrerit auctor suscipit. Maecenas facilisis Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus a nunc sed justo fringilla tempus. Curabitur finibus porta sodales. Cras hendrerit auctor suscipit. Maecenas facilisis";
+  const { context } = useZustandStore();
+  const [news, setNews] = useState<TGetNewsListResponse[]>([]);
+
+  const fetchNews = useCallback(async () => {
+    if (!context) return;
+
+    try {
+      const { data } = await getNewsListPaginated(context, 4);
+      setNews(data);
+    } catch (error) {
+      console.error("Erro ao buscar as notícias:", error);
+    }
+  }, [context]);
+
+  useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
+
+  if (!news.length) {
+    return <p>Carregando notícias...</p>;
+  }
+
+  const [mainNews, ...otherNews] = news.reverse();
 
   return (
     <NewsContainer>
+      {/* Notícia Principal */}
       <MainNews>
-        <img
-          src="https://via.placeholder.com/800x400"
-          alt="Notícia principal"
-        />
-        <h2>Notícia Principal</h2>
-        <p>{truncateText(description, 185)}</p>
+        <img src={mainNews.LinkBanner} alt={mainNews.Title} />
+        <h2>{mainNews.Title}</h2>
+        <p>{truncateText(mainNews.Descricao, 185)}</p>
 
         <div>
-          <p>Usuário </p>
-          <p>20/11/2024</p>
+          <p>{mainNews.Created.split("T")[0]}</p>
+          <p>{mainNews.Created}</p>
         </div>
         <Stats>
-          <span>👍 45</span>
-          <span>👁️ 100</span>
+          {/* <span>👍 {mainNews.LikedUsers?.length || 0}</span> */}
+          {/* <span>👁️ {mainNews.Views}</span> */}
         </Stats>
       </MainNews>
+
+      {/* Outras Notícias */}
       <OtherNews>
-        {[1, 2, 3].map((_, index) => (
-          <NewsItem key={index}>
-            <img
-              src={`https://via.placeholder.com/250x150`}
-              alt={`Notícia ${index + 1}`}
-            />
+        {otherNews.map((item) => (
+          <NewsItem key={item.Id}>
+            <img src={item.LinkBanner} alt={item.Title} />
             <div>
-              <h3>Notícia {index + 1}</h3>
-              <p>{truncateText(description, 185)}</p>
+              <h3>{item.Title}</h3>
+              <p>{truncateText(item.Descricao, 120)}</p>
               <UserInfo>
                 <img
-                  src="https://via.placeholder.com/40"
-                  alt={`Usuário ${index + 1}`}
+                  src={`https://via.placeholder.com/40`}
+                  alt={item.Created}
                 />
                 <div>
-                  <p>Usuário {index + 1}</p>
-                  <p>20/11/2024</p>
+                  <p>{item.Created.split("T")[0]}</p>
+                  <p>{item.Created}</p>
                 </div>
-                <Stats>
-                  <span>👍 45</span>
-                  <span>👁️ 100</span>
-                </Stats>
+                <Stats>{/* <span>👁️ {item.Views}</span> */}</Stats>
               </UserInfo>
             </div>
           </NewsItem>

@@ -6,7 +6,7 @@ export const NewsContainer = styled.div`
   max-width: 100%;
   margin: 20px auto;
   gap: 2%;
-  padding: 0 10.125rem;
+  /* padding: 0 10.125rem; */
 `;
 
 export const MainNews = styled.div`
@@ -20,7 +20,7 @@ export const MainNews = styled.div`
 
   img {
     width: 100%;
-    height: 500px;
+    height: auto;
     object-fit: cover;
     border-radius: 6px 6px 0 0;
   }
@@ -48,15 +48,16 @@ export const OtherNews = styled.div`
 
 export const NewsItem = styled.div`
   display: grid;
-  grid-template-columns: 50% 50%;
+  grid-template-columns: 50% 45%;
   align-items: center;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;
+  gap: 2rem;
 
   img {
     width: 100%;
-    height: 14.5rem;
+    height: auto;
     object-fit: cover;
     border-radius: 6px 0 0 6px;
   }
@@ -81,7 +82,7 @@ export const NewsItem = styled.div`
 `;
 export const UserInfo = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   margin-top: 10px;
 
   img {

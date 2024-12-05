@@ -4,7 +4,7 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 export type TGetNewsListResponse = {
   Id: number;
   Title: string;
-  Likes: string;
+  LikedUsers: string;
   Views: number;
   LinkBanner: string;
   Descricao: string;
@@ -31,7 +31,7 @@ export const getMostViewedNewsList = async (
   amountOfNews: number,
 ): Promise<TGetNewsListResponse[]> => {
   const urlBase = `${context.pageContext.web.absoluteUrl}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const orderBy = `&$orderby=Views desc`;
   const top = `&$top=${amountOfNews}`;
 
