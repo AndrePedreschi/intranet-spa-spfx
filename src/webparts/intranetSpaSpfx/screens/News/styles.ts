@@ -87,10 +87,3 @@ export const DoubleArrow = styled.img`
   width: 24px;
   height: 24px;
 `;
-
-export const IconHeart = styled.img`
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  transition: filter 0.3s ease;
-`;

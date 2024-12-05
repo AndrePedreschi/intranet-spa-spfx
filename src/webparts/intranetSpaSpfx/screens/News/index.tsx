@@ -1,22 +1,11 @@
 import { ReactElement, useCallback, useEffect, useState } from "react";
 
-import { Link, useHistory } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
-import {
-  Banner,
-  ButtonBack,
-  CardNews,
-  ContainerNews,
-  DoubleArrow,
-  IconHeart,
-  ReturnLink,
-  TitleNews,
-  Typography,
-  TypographyText,
-} from "./styles";
+import { ButtonBack, ContainerNews, DoubleArrow, ReturnLink } from "./styles";
 import doubleArrow from "../../assets/double-arrow.svg";
-import likedHeart from "../../assets/heart-liked.svg";
-import iconHeart from "../../assets/icon-heart.svg";
+import { CardNews } from "../../components/CardNews";
+import { LikeViews } from "../../components/LikeViews";
 import {
   getNewsListPaginated,
   TGetNewsListResponse,
@@ -25,11 +14,10 @@ import {
 import { useZustandStore } from "../../store";
 
 export const News = (): ReactElement => {
+  const [loading, setLoading] = useState<number>();
   const { context } = useZustandStore();
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
-  const [likedNews, setLikedNews] = useState<number[]>([]);
   const history = useHistory();
-  const user: string = context?.pageContext?.legacyPageContext.userId;
 
   const [, setParam] = useState("");
   const itemsPerPage = 25;
@@ -59,58 +47,28 @@ export const News = (): ReactElement => {
     [context],
   );
 
-  function breakDescription(description: string, id: number): JSX.Element {
-    if (description.length > 90) {
-      const breakedDescription = description.slice(0, 90);
-      return (
-        <>
-          {breakedDescription}
-          {"... "}
-          <Link
-            to={`/internalNews/${id}`}
-            style={{ color: "blue", textDecoration: "underline" }}
-          >
-            Leia Mais
-          </Link>
-        </>
-      );
-    }
-    return <>{description}</>;
-  }
-
-  function parseLikes(likes: string) {
+  const handleLike = async (dataReceived: {
+    id: number;
+    arrayLikes: string;
+  }) => {
+    if (!context) return;
     try {
-      const likesParsed: number[] = JSON.parse(likes || "[]");
-      return likesParsed.length;
+      setLoading(dataReceived.id);
+
+      await updateNewsLikesAndViews(context, dataReceived.id);
     } catch (error) {
-      console.error("Erro ao processar os likes:", error);
-      return 0;
+      console.error("Erro dar like em um comentário:", error);
     }
-  }
 
-  function formateDate(date: string) {
-    return date.split("T")[0].split("-").reverse().join("/");
-  }
-
-  async function handleLike(newsId: number) {
-    if (!likedNews.includes(newsId)) {
-      setLikedNews([...likedNews, newsId]);
-      if (context) {
-        await updateNewsLikesAndViews(context, newsId);
-        getData();
-      }
-    } else {
-      setLikedNews(likedNews.filter((id) => id !== newsId));
-      getData();
-    }
-  }
+    setLoading(undefined);
+  };
 
   useEffect(() => {
     getData();
   }, [getData]);
 
   return (
-    <>
+    <div className="screenTransitionControl">
       <ReturnLink>
         <ButtonBack onClick={() => history.goBack()}>
           <DoubleArrow src={doubleArrow} alt="arrow" />
@@ -119,32 +77,17 @@ export const News = (): ReactElement => {
       </ReturnLink>
       <ContainerNews>
         {listNews &&
-          listNews.map((item) => (
-            <CardNews key={item.Id || item.Title}>
-              <Banner src={item.LinkBanner}></Banner>
-              <TitleNews>{item.Title}</TitleNews>
-              <Typography>
-                {formateDate(item.Created)}
-                <div>
-                  <IconHeart
-                    src={
-                      item.Likes && user && item.Likes.includes(user)
-                        ? likedHeart
-                        : iconHeart
-                    }
-                    alt="heart"
-                    liked={item.Likes && user && item.Likes.includes(user)}
-                    onClick={() => handleLike(item.Id)}
-                  />
-                  {parseLikes(item.Likes)} Likes <p>{item.Views} Views</p>
-                </div>
-              </Typography>
-              <TypographyText>
-                {breakDescription(item.Descricao, item.Id)}
-              </TypographyText>
+          listNews.map((news) => (
+            <CardNews key={news.Id} cardData={news}>
+              <LikeViews
+                likeLoadingControl={loading}
+                origin={"news"}
+                dataToLikeViews={news}
+                handleLike={(dataReceived) => handleLike(dataReceived)}
+              />
             </CardNews>
           ))}
       </ContainerNews>
-    </>
+    </div>
   );
 };
