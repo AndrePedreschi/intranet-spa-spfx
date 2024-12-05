@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode, useCallback, useEffect, useRef } from "react";
 
 import { Container, LoaderContainer, EndOfContentContainer } from "./styles";
-import { Loading } from "../Loading";
+import { Loader } from "../Loader";
 
 type TInfiniteScrollProps = {
   children: ReactNode;
@@ -60,7 +60,7 @@ export const InfiniteScroll = ({
       )}
       {scrollRequestLoading && (
         <LoaderContainer>
-          <Loading />
+          <Loader />
         </LoaderContainer>
       )}
     </Container>

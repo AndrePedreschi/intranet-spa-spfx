@@ -1,7 +1,7 @@
 import { ReactElement } from "react";
 
 import { Dots } from "./styles";
-export const Loading = (): ReactElement => {
+export const Loader = (): ReactElement => {
   return (
     <Dots>
       <div className="dot" />

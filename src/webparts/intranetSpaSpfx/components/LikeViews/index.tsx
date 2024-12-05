@@ -6,6 +6,7 @@ import iconHeart from "../../assets/icon-heart.svg";
 import { TGetCommentsListResponse } from "../../services/comments.service";
 import { TGetNewsListResponse } from "../../services/news.service";
 import { useZustandStore } from "../../store";
+import { formatStringToArray } from "../../utils/formatLikesViews";
 import { Spinner } from "../Spinner";
 
 type TLikeViews = {
@@ -14,7 +15,7 @@ type TLikeViews = {
   dataToLikeViews: TGetNewsListResponse | TGetCommentsListResponse;
   showLike?: boolean;
   showViews?: boolean;
-  handleLike?: (dataToSend: { id: number; arrayLikes: string }) => void;
+  handleLike?: (dataToSend: { id: number; arrayLikes: number[] }) => void;
 };
 
 export const LikeViews = ({
@@ -42,18 +43,18 @@ export const LikeViews = ({
     if (likes.includes(user)) {
       const editedLikes = likes.filter((userId) => userId !== user);
       setLikes(editedLikes);
-      return handleLike({ id: id, arrayLikes: JSON.stringify(editedLikes) });
+      return handleLike({ id: id, arrayLikes: editedLikes });
     } else {
       const editedLikes = [...likes, user];
       setLikes(editedLikes);
 
       audio.play();
-      return handleLike({ id: id, arrayLikes: JSON.stringify(editedLikes) });
+      return handleLike({ id: id, arrayLikes: editedLikes });
     }
   };
 
   useEffect(() => {
-    setLikes(JSON.parse(dataToLikeViews.Likes || "[]"));
+    setLikes(formatStringToArray(dataToLikeViews.LikedUsers));
     setId(dataToLikeViews.Id);
   }, [dataToLikeViews]);
 
@@ -78,7 +79,7 @@ export const LikeViews = ({
       )}
       {showViews && verifyType(dataToLikeViews) && (
         <section>
-          <p>{dataToLikeViews.Views} Views</p>
+          <p>{dataToLikeViews.Views || 0} Views</p>
         </section>
       )}
     </Container>

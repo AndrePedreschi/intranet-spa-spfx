@@ -12,6 +12,10 @@ import {
   updateNewsLikesAndViews,
 } from "../../services/news.service";
 import { useZustandStore } from "../../store";
+import {
+  formatArrayToString,
+  formatStringToArray,
+} from "../../utils/formatLikesViews";
 
 export const News = (): ReactElement => {
   const [loading, setLoading] = useState<number>();
@@ -49,18 +53,41 @@ export const News = (): ReactElement => {
 
   const handleLike = async (dataReceived: {
     id: number;
-    arrayLikes: string;
+    arrayLikes: number[];
   }) => {
     if (!context) return;
     try {
       setLoading(dataReceived.id);
+      const user: number = context?.pageContext?.legacyPageContext.userId;
 
       await updateNewsLikesAndViews(context, dataReceived.id);
-    } catch (error) {
-      console.error("Erro dar like em um comentário:", error);
-    }
+      const newsToEdit = listNews?.find((news) => news.Id === dataReceived.id);
 
-    setLoading(undefined);
+      if (
+        newsToEdit &&
+        !formatStringToArray(newsToEdit.LikedUsers).includes(user) &&
+        !formatStringToArray(newsToEdit.ViewedUsers).includes(user)
+      ) {
+        setListNews((prevListNews) => {
+          if (!prevListNews) return prevListNews;
+
+          const updatedLikes = prevListNews.map((news) =>
+            news.Id === dataReceived.id
+              ? {
+                  ...news,
+                  Views: news.Views + 1,
+                  LikedUsers: formatArrayToString(dataReceived.arrayLikes),
+                }
+              : news,
+          );
+          return updatedLikes;
+        });
+      }
+    } catch (error) {
+      console.error("Erro dar like em uma notícia:", error);
+    } finally {
+      setLoading(undefined);
+    }
   };
 
   useEffect(() => {
