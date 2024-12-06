@@ -2,16 +2,21 @@ import { SPHttpClient } from "@microsoft/sp-http";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
 
 import { useZustandStore } from "../store";
+import {
+  formatArrayToString,
+  formatStringToArray,
+} from "../utils/formatLikesViews";
 
 export type TGetNewsListResponse = {
   Id: number;
   Title: string;
-  Likes: string;
+  LikedUsers: string;
   Views: number;
   LinkBanner: string;
   Descricao: string;
   Created: string;
   AuthorId: number;
+  ViewedUsers?: string;
 };
 const urlSite = useZustandStore.getState().urlSite;
 /**
@@ -21,7 +26,7 @@ const urlSite = useZustandStore.getState().urlSite;
  *
  * @param {WebPartContext} context - O contexto do WebPart que inclui informações sobre o site e a página atual.
  * @param {number} amountOfNews - Quantidade de itens a ser buscado.
- * @returns {Promise<TGetNewsListResponse[]>} Uma promessa que resolve com uma lista das 4 notícias mais visualizadas, cada uma com os campos: Id, Title, Likes, Views, LinkBanner, Descricao, Created, AuthorId.
+ * @returns {Promise<TGetNewsListResponse[]>} Uma promessa que resolve com uma lista das 4 notícias mais visualizadas, cada uma com os campos: Id, Title, LikedUsers, Views, LinkBanner, Descricao, Created, AuthorId.
  * @throws {Error} Lança um erro se a requisição falhar.
  *
  * @example
@@ -33,7 +38,7 @@ export const getMostViewedNewsList = async (
   amountOfNews: number,
 ): Promise<TGetNewsListResponse[]> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const orderBy = `&$orderby=Views desc`;
   const top = `&$top=${amountOfNews}`;
 
@@ -72,7 +77,7 @@ export const getNewsById = async (
   newsId: number,
 ): Promise<TGetNewsListResponse> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items(${newsId})`;
-  const select = `?$select=Id,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
 
   const response = await context.spHttpClient.get(
     `${urlBase}${select}`,
@@ -135,9 +140,12 @@ export const getNewsListPaginated = async (
   context: WebPartContext,
   pageSize: number,
   skipToken?: string | null,
-): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
+): Promise<{
+  data: TGetNewsListResponse[];
+  nextSkipToken: string | null;
+}> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=ID,Title,LikedUsers,ViewedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
   const skipTokenParam = skipToken
     ? `&$skiptoken=${skipToken.replace("&", "%26")}`
@@ -211,7 +219,7 @@ export const getNewsListPaginatedSimple = async (
   nextUrl?: string | null,
 ): Promise<{ data: TGetNewsListResponse[]; nextSkipToken: string | null }> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
-  const select = `?$select=ID,Title,Likes,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const select = `?$select=ID,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
   const top = `&$top=${pageSize}`;
 
   const dataUrl = `${urlBase}${select}${top}`;
@@ -275,19 +283,16 @@ export const updateNewsViews = async (
 
   const responseJson = await getItemResponse.json();
 
-  let viewedUsers: number[] = JSON.parse(responseJson.ViewedUsers);
+  const viewedUsers: number[] = formatStringToArray(responseJson.ViewedUsers);
   const user: number = context.pageContext.legacyPageContext.userId;
 
-  if (viewedUsers === null) {
-    viewedUsers = [];
-    viewedUsers.push(user);
-  } else if (!viewedUsers.find((userId: number) => userId === user)) {
+  if (!viewedUsers.find((userId: number) => userId === user)) {
     viewedUsers.push(user);
   }
 
   const body = JSON.stringify({
     Views: responseJson.Views + 1,
-    ViewedUsers: JSON.stringify(viewedUsers),
+    ViewedUsers: formatArrayToString(viewedUsers),
   });
 
   const headers = {
@@ -339,19 +344,16 @@ export const updateNewsLikes = async (
   const responseJson = await getItemResponse.json();
 
   const user: number = context.pageContext.legacyPageContext.userId;
-  let likes: number[] = JSON.parse(responseJson.Likes);
+  let likes: number[] = formatStringToArray(responseJson.LikedUsers);
 
-  if (likes === null) {
-    likes = [];
-    likes.push(user);
-  } else if (!likes.find((userId: number) => userId === user)) {
+  if (!likes.find((userId: number) => userId === user)) {
     likes.push(user);
   } else {
     likes = likes.filter((userId: number) => userId !== user);
   }
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(likes),
+    LikedUsers: formatArrayToString(likes),
   });
 
   const headers = {
@@ -415,23 +417,28 @@ export const updateNewsLikesAndViews = async (
   const user: number = context.pageContext.legacyPageContext.userId;
 
   let updatedViews = responseJson.Views || 0;
-  let updatedLikes: number[] = JSON.parse(responseJson.Likes || "[]");
-  const viewedUsers: number[] = JSON.parse(responseJson.ViewedUsers || "[]");
+  let updatedLikedUsers: number[] = formatStringToArray(
+    responseJson.LikedUsers,
+  );
 
-  if (!updatedLikes.includes(user)) {
-    updatedLikes.push(user);
+  const viewedUsers: number[] = formatStringToArray(responseJson.ViewedUsers);
+
+  if (!updatedLikedUsers.includes(user)) {
+    updatedLikedUsers.push(user);
     if (!viewedUsers.includes(user)) {
       viewedUsers.push(user);
       updatedViews += 1;
     }
   } else {
-    updatedLikes = updatedLikes.filter((userId: number) => userId !== user);
+    updatedLikedUsers = updatedLikedUsers.filter(
+      (userId: number) => userId !== user,
+    );
   }
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(updatedLikes),
+    LikedUsers: formatArrayToString(updatedLikedUsers),
     Views: updatedViews,
-    ViewedUsers: JSON.stringify(viewedUsers),
+    ViewedUsers: formatArrayToString(viewedUsers),
   });
 
   const headers = {

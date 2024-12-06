@@ -4,19 +4,22 @@ import { WebPartContext } from "@microsoft/sp-webpart-base";
 import { useZustandStore } from "../store";
 import { TGetSubCommentsListResponse } from "./subcomments.service";
 import { TGetUserResponse } from "./user.service";
+import {
+  formatArrayToString,
+  formatStringToArray,
+} from "../utils/formatLikesViews";
 
 export type TGetCommentsListResponse = {
   user: TGetUserResponse;
   SubComments: TGetSubCommentsListResponse[];
   Id: number;
-  Likes: string;
+  LikedUsers: string;
   IdNoticia: number;
   Comentario: string;
   Created: string;
   AuthorId: number;
 };
 export type TRequestBody = {
-  Likes: string;
   Comentario: string;
   IdNoticia: number;
 };
@@ -38,7 +41,7 @@ const urlSite = useZustandStore.getState().urlSite;
  * // [
  * //   {
  * //     Id: 1,
- * //     Likes: "[45, 46]",
+ * //     LikedUsers: "45, 46",
  * //     IdNoticia: 123,
  * //     Comentario: "Primeiro comentário.",
  * //     Created: "2024-11-22T10:00:00Z",
@@ -46,7 +49,7 @@ const urlSite = useZustandStore.getState().urlSite;
  * //   },
  * //   {
  * //     Id: 2,
- * //     Likes: "[]",
+ * //     LikedUsers: "",
  * //     IdNoticia: 123,
  * //     Comentario: "Segundo comentário.",
  * //     Created: "2024-11-22T11:00:00Z",
@@ -59,7 +62,7 @@ export const getCommentsList = async (
   newsId: number,
 ): Promise<TGetCommentsListResponse[]> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
-  const select = `?$select=Id,Likes,IdNoticia,Comentario,Created,AuthorId`;
+  const select = `?$select=Id,LikedUsers,IdNoticia,Comentario,Created,AuthorId`;
   const filter = `$filter=IdNoticia eq ${newsId}`;
   const orderBy = `&$orderby=Created asc`;
 
@@ -87,7 +90,7 @@ export const getCommentsList = async (
  *
  * @example
  * const requestBody = {
- *   Likes: "[]", // Inicialmente vazio
+ *   Likes: "", // Inicialmente vazio
  *   Comentario: "Este é um novo comentário.",
  *   IdNoticia: 123
  * };
@@ -158,20 +161,17 @@ export const updateCommentLikes = async (
 
   const responseJson = await getItemResponse.json();
 
-  const user: string = context.pageContext.legacyPageContext.userId;
-  let likes: string[] = JSON.parse(responseJson.Likes);
+  const user: number = context.pageContext.legacyPageContext.userId;
+  let likes: number[] = formatStringToArray(responseJson.LikedUsers);
 
-  if (likes === null) {
-    likes = [];
-    likes.push(user);
-  } else if (!likes.find((userId: string) => userId === user)) {
+  if (!likes.find((userId: number) => userId === user)) {
     likes.push(user);
   } else {
-    likes = likes.filter((userId: string) => userId !== user);
+    likes = likes.filter((userId: number) => userId !== user);
   }
 
   const body = JSON.stringify({
-    Likes: JSON.stringify(likes),
+    LikedUsers: formatArrayToString(likes),
   });
 
   const headers = {

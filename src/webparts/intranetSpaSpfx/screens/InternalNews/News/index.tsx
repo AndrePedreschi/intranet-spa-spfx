@@ -16,7 +16,7 @@ import {
   NewsImg,
 } from "./styles";
 import { LikeViews } from "../../../components/LikeViews";
-import { Loading } from "../../../components/Loading";
+import { Loader } from "../../../components/Loader";
 import {
   getCommentsList,
   TGetCommentsListResponse,
@@ -91,21 +91,21 @@ export const News = (): ReactElement => {
 
   const handleCommentLike = async (dataReceived: {
     id: number;
-    arrayLikes: string;
+    arrayLikes: number[];
   }) => {
     if (!context) return;
     try {
       setLoading(dataReceived.id);
       await updateCommentLikes(context, dataReceived.id);
     } catch (error) {
-      console.error("Erro dar like em um comentário:", error);
+      console.error("Erro ao dar like em um comentário:", error);
     }
     setLoading(undefined);
   };
 
   const handleNewsLike = async (dataReceived: {
     id: number;
-    arrayLikes: string;
+    arrayLikes: number[];
   }) => {
     if (!context) return;
     try {
@@ -113,7 +113,7 @@ export const News = (): ReactElement => {
 
       await updateNewsLikes(context, dataReceived.id);
     } catch (error) {
-      console.error("Erro dar like em um comentário:", error);
+      console.error("Erro ao dar like em uma notícia:", error);
     }
     setLoading(undefined);
   };
@@ -160,7 +160,6 @@ export const News = (): ReactElement => {
     try {
       setCommentLoading(true);
       const commentBody = {
-        Likes: "[]",
         Comentario: comment,
         IdNoticia: newsId,
       };
@@ -269,12 +268,12 @@ export const News = (): ReactElement => {
               />
             </CommentSection>
           ))}
-        {commentLoading && <Loading />}
+        {commentLoading && <Loader />}
       </CommentContainer>
     </Container>
   ) : (
     <LoadingContainer>
-      <Loading />
+      <Loader />
     </LoadingContainer>
   );
 };

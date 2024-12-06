@@ -5,7 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { Container, TextSection } from "./styles";
 import { CardNews } from "../../../components/CardNews";
 import { LikeViews } from "../../../components/LikeViews";
-import { Loading } from "../../../components/Loading";
+import { Loader } from "../../../components/Loader";
 import {
   getMostViewedNewsList,
   TGetNewsListResponse,
@@ -55,6 +55,6 @@ export const MostViewed = (): ReactElement => {
         ))}
     </Container>
   ) : (
-    <Loading />
+    <Loader />
   );
 };
