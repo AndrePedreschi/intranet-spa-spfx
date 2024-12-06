@@ -16,7 +16,7 @@ export type TGetNewsListResponse = {
   Descricao: string;
   Created: string;
   AuthorId: number;
-  ViewedUsers: string;
+  ViewedUsers?: string;
 };
 const urlSite = useZustandStore.getState().urlSite;
 /**
