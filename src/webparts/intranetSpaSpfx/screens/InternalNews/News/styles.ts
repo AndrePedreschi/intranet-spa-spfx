@@ -86,6 +86,7 @@ export const SubCommentSection = styled.section`
 export const UserSection = styled.section`
   width: 100%;
   display: flex;
+  justify-content: space-between;
   gap: 1rem;
 `;
 

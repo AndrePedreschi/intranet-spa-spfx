@@ -22,6 +22,7 @@ import {
   TGetCommentsListResponse,
   postNewComment,
   updateCommentLikes,
+  deleteComment,
 } from "../../../services/comments.service";
 import {
   getNewsById,
@@ -33,6 +34,7 @@ import {
   getSubCommentsList,
   TGetSubCommentsListResponse,
   postNewSubComment,
+  deleteSubComment,
 } from "../../../services/subcomments.service";
 import { getUser, TGetUserResponse } from "../../../services/user.service";
 import { useZustandStore } from "../../../store";
@@ -61,7 +63,7 @@ export const News = (): ReactElement => {
   const [loading, setLoading] = useState<number>();
   const [commentLoading, setCommentLoading] = useState<boolean>(false);
 
-  const getData = useCallback(async () => {
+  /* const getData = useCallback(async () => {
     if (context && context.pageContext) {
       try {
         await updateNewsViews(context, Number(id));
@@ -86,6 +88,51 @@ export const News = (): ReactElement => {
       } catch (error: any) {
         console.error("Erro ao buscar notícia:", error.message || error);
       }
+    }
+  }, [context, id]); */
+
+  const getData = useCallback(async () => {
+    if (!context || !context.pageContext) return;
+
+    try {
+      await updateNewsViews(context, Number(id));
+
+      const newsResponse: TNews = await getNewsById(context, Number(id));
+
+      const [comments, user] = await Promise.all([
+        getCommentsList(context, newsResponse.Id),
+        getUser(context, newsResponse.AuthorId),
+      ]);
+
+      const processedComments = await Promise.all(
+        comments.map(async (comment) => {
+          const [subComments, commentUser] = await Promise.all([
+            getSubCommentsList(context, comment.Id),
+            getUser(context, comment.AuthorId),
+          ]);
+
+          const processedSubComments = await Promise.all(
+            subComments.map(async (subComment) => ({
+              ...subComment,
+              user: await getUser(context, subComment.AuthorId),
+            })),
+          );
+
+          return {
+            ...comment,
+            SubComments: processedSubComments,
+            user: commentUser,
+          };
+        }),
+      );
+
+      setNews({
+        ...newsResponse,
+        Comments: processedComments,
+        user,
+      });
+    } catch (error: any) {
+      console.error("Erro ao buscar notícia:", error.message || error);
     }
   }, [context, id]);
 
@@ -125,7 +172,7 @@ export const News = (): ReactElement => {
         IdComentario: commentId,
         SubComentario: subComment,
       };
-      await postNewSubComment(context, subCommentBody);
+      const { subCommentId } = await postNewSubComment(context, subCommentBody);
 
       const currentUser = await getUser(context, currentUserId);
 
@@ -138,6 +185,7 @@ export const News = (): ReactElement => {
               ...subComment,
               {
                 ...subCommentBody,
+                Id: subCommentId,
                 AuthorId: currentUserId,
                 Created: new Date().toISOString(),
                 user: currentUser,
@@ -164,28 +212,86 @@ export const News = (): ReactElement => {
         IdNoticia: newsId,
       };
 
-      await postNewComment(context, commentBody);
-      const newCommentList = await getCommentsList(context, newsId);
-      for await (const comment of newCommentList) {
-        comment.SubComments = await getSubCommentsList(context, comment.Id);
-        comment.user = await getUser(context, comment.AuthorId);
-
-        for await (const subComment of comment.SubComments) {
-          subComment.user = await getUser(context, subComment.AuthorId);
-        }
-      }
+      const { newComment } = await postNewComment(context, commentBody);
+      newComment.user = await getUser(context, newComment.AuthorId);
 
       setNews((prevNews) => {
         if (!prevNews) return prevNews;
         return {
           ...prevNews,
-          Comments: newCommentList,
+          Comments: [...(prevNews.Comments || []), newComment],
         };
       });
       setCommentLoading(false);
     } catch (error) {
       console.error("Erro fazer um comentário:", error);
       setCommentLoading(false);
+    }
+  };
+
+  const deleteSubCommentFn = async (
+    commentId: number,
+    subCommentId: number | undefined,
+  ) => {
+    if (!context || !subCommentId) return;
+
+    try {
+      await deleteSubComment(context, subCommentId);
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.map((comment) => {
+          if (comment.Id === commentId) {
+            const updatedSubComments = comment.SubComments?.filter(
+              (subComment) => subComment.Id !== subCommentId,
+            );
+            return { ...comment, SubComments: updatedSubComments };
+          }
+          return comment;
+        });
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao deletar um comentário:", error);
+    }
+  };
+
+  const deleteCommentFn = async (commentId: number) => {
+    if (!context) return;
+
+    if (!news || !news.Comments) {
+      console.error("Erro: `news` ou `news.Comments` está indefinido.");
+      return;
+    }
+    try {
+      await deleteComment(context, commentId);
+
+      const commentToDelete = news.Comments?.find(
+        (comment) => comment.Id === commentId,
+      );
+
+      if (commentToDelete?.SubComments) {
+        const validSubCommentIds = commentToDelete.SubComments.map(
+          (subComment) => subComment.Id,
+        ).filter((id): id is number => id !== undefined);
+
+        await Promise.all(
+          validSubCommentIds.map((subCommentId) =>
+            deleteSubComment(context, subCommentId),
+          ),
+        );
+      }
+
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.filter(
+          (comment) => comment.Id !== commentId,
+        );
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao deletar um comentário:", error);
     }
   };
 
@@ -223,13 +329,21 @@ export const News = (): ReactElement => {
             <CommentSection key={comment.Id}>
               <Comment>
                 <UserSection>
-                  <UserImg $url={comment.user?.UserImg} />
+                  <div>
+                    <UserImg $url={comment.user?.UserImg} />
+                    <UserData>
+                      <h1>{comment.user?.Title}</h1>
+                      <p>{formatDate(comment.Created)}</p>
+                    </UserData>
+                  </div>
 
-                  <UserData>
-                    <h1>{comment.user?.Title}</h1>
-                    <p>{formatDate(comment.Created)}</p>
-                  </UserData>
+                  {comment.AuthorId === currentUserId ? (
+                    <button onClick={() => deleteCommentFn(comment.Id)}>
+                      X
+                    </button>
+                  ) : null}
                 </UserSection>
+
                 <p>{comment.Comentario}</p>
                 <hr />
                 <LikeViews
@@ -247,12 +361,24 @@ export const News = (): ReactElement => {
                         key={subComment.Created + subComment.AuthorId}
                       >
                         <UserSection>
-                          <UserImg $url={subComment.user?.UserImg} />
+                          <div>
+                            <UserImg $url={subComment.user?.UserImg} />
 
-                          <UserData>
-                            <h1>{subComment.user?.Title}</h1>
-                            <p>{formatDate(subComment.Created)}</p>
-                          </UserData>
+                            <UserData>
+                              <h1>{subComment.user?.Title}</h1>
+                              <p>{formatDate(subComment.Created)}</p>
+                            </UserData>
+                          </div>
+
+                          {subComment.AuthorId === currentUserId ? (
+                            <button
+                              onClick={() =>
+                                deleteSubCommentFn(comment.Id, subComment.Id)
+                              }
+                            >
+                              X
+                            </button>
+                          ) : null}
                         </UserSection>
 
                         <p>{subComment.SubComentario}</p>
