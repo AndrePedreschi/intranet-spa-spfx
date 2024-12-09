@@ -22,7 +22,8 @@ export const News = (): ReactElement => {
   const { context } = useZustandStore();
   const [listNews, setListNews] = useState<TGetNewsListResponse[]>([]);
   const [nextUrlRequest, setNextUrlRequest] = useState<string | null>(null);
-  const [endOfList, setEndOfList] = useState(false);
+  const [endOfList, setEndOfList] = useState<boolean>(false);
+  const [loadingScroll, setLoadingScroll] = useState<boolean>(false);
   const history = useHistory();
 
   const itemsPerPage = 8;
@@ -31,6 +32,7 @@ export const News = (): ReactElement => {
     async (url?: string) => {
       if (!context) return;
       try {
+        setLoadingScroll(true);
         const { data, nextSkipToken: nextSkipToken } =
           await getNewsListPaginated(context, itemsPerPage, url);
         setNextUrlRequest(nextSkipToken || null);
@@ -43,10 +45,11 @@ export const News = (): ReactElement => {
 
         if (!nextSkipToken) {
           setEndOfList(true);
-          console.log("Fim da lista alcançado.");
         }
       } catch (error) {
         console.error("Erro ao buscar dados paginados:", error);
+      } finally {
+        setLoadingScroll(false);
       }
     },
     [context],
@@ -105,7 +108,7 @@ export const News = (): ReactElement => {
       </ReturnLink>
       <InfiniteScroll
         endOfListCondition={endOfList}
-        scrollRequestLoading={!!loading}
+        scrollRequestLoading={loadingScroll}
         nextUrlRequest={nextUrlRequest ?? ""}
         handlerPageChange={() => {
           if (nextUrlRequest) getData(nextUrlRequest);
