@@ -102,7 +102,7 @@ export const getCommentsList = async (
 export const postNewComment = async (
   context: WebPartContext,
   requestBody: TRequestBody,
-): Promise<{ msg: string }> => {
+): Promise<{ msg: string; newComment: TGetCommentsListResponse }> => {
   const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
 
   const body = JSON.stringify(requestBody);
@@ -122,8 +122,12 @@ export const postNewComment = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Views: ${errorText}`);
   }
-
-  return { msg: "Comentário enviado com sucesso!" };
+  const postResponseJson = await updateResponse.json();
+  return {
+    msg: "Comentário enviado com sucesso!",
+    //commentId: postResponseJson.Id,
+    newComment: postResponseJson,
+  };
 };
 
 /**
@@ -191,26 +195,43 @@ export const updateCommentLikes = async (
   }
 };
 
-export const getLastComment = async (
+/**
+ * Exclui um comentário de uma lista do SharePoint com base no ID fornecido.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart necessário para realizar a chamada à API REST do SharePoint.
+ * @param {number} commentId - O ID do comentário que será excluído.
+ * @returns {Promise<void>} - Retorna uma Promise resolvida quando a exclusão for bem-sucedida.
+ * @throws {Error} - Lança um erro caso a requisição falhe, incluindo detalhes da resposta do servidor.
+ *
+ * @example
+ * // Exemplo de uso
+ * try {
+ *   await deleteComment(context, 456);
+ *   console.log("Comentário excluído com sucesso!");
+ * } catch (error) {
+ *   console.error("Erro ao excluir comentário:", error);
+ * }
+ */
+export const deleteComment = async (
   context: WebPartContext,
-  newsId: number,
-): Promise<TGetCommentsListResponse[]> => {
-  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items`;
-  const select = `?$select=Id,Likes,IdNoticia,Comentario,Created,AuthorId`;
-  const filter = `$filter=IdNoticia eq ${newsId}`;
-  const orderBy = `&$orderby=Created desc`;
-  const top = `&$top=1`;
+  commentId: number,
+): Promise<void> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
 
-  const response = await context.spHttpClient.get(
-    `${urlBase}${select}${filter}${orderBy}${top}`,
+  const body = JSON.stringify({ Id: commentId });
+  const headers = {
+    "X-HTTP-Method": "DELETE",
+    "IF-MATCH": "*",
+  };
+
+  const updateResponse = await context.spHttpClient.post(
+    urlBase,
     SPHttpClient.configurations.v1,
+    { body: body, headers: headers },
   );
 
-  if (!response || (response && !response.ok)) {
-    const responseText = await response.text();
-    throw new Error(responseText);
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text();
+    throw new Error(`Failed to update Views: ${errorText}`);
   }
-
-  const responseJson = await response.json();
-  return responseJson.value;
 };
