@@ -5,6 +5,7 @@ import { useHistory } from "react-router-dom";
 import { ButtonBack, ContainerNews, DoubleArrow, ReturnLink } from "./styles";
 import doubleArrow from "../../assets/double-arrow.svg";
 import { CardNews } from "../../components/CardNews";
+import { InfiniteScroll } from "../../components/InfiniteScroll";
 import { LikeViews } from "../../components/LikeViews";
 import {
   getNewsListPaginated,
@@ -16,36 +17,39 @@ import {
   formatArrayToString,
   formatStringToArray,
 } from "../../utils/formatLikesViews";
-
 export const News = (): ReactElement => {
   const [loading, setLoading] = useState<number>();
   const { context } = useZustandStore();
-  const [listNews, setListNews] = useState<TGetNewsListResponse[]>();
+  const [listNews, setListNews] = useState<TGetNewsListResponse[]>([]);
+  const [nextUrlRequest, setNextUrlRequest] = useState<string | null>(null);
+  const [endOfList, setEndOfList] = useState<boolean>(false);
+  const [loadingScroll, setLoadingScroll] = useState<boolean>(false);
   const history = useHistory();
 
-  const [, setParam] = useState("");
-  const itemsPerPage = 25;
+  const itemsPerPage = 8;
 
   const getData = useCallback(
     async (url?: string) => {
-      if (context) {
-        try {
-          const { data, nextSkipToken } = await getNewsListPaginated(
-            context,
-            itemsPerPage,
-            url,
+      if (!context) return;
+      try {
+        setLoadingScroll(true);
+        const { data, nextSkipToken: nextSkipToken } =
+          await getNewsListPaginated(context, itemsPerPage, url);
+        setNextUrlRequest(nextSkipToken || null);
+        setListNews((prevListNews) => {
+          const newItems = data.filter(
+            (news) => !prevListNews.some((prevNews) => prevNews.Id === news.Id),
           );
+          return [...prevListNews, ...newItems];
+        });
 
-          if (nextSkipToken) {
-            setParam(nextSkipToken);
-          } else {
-            console.log("Final da lista");
-          }
-
-          setListNews(data);
-        } catch (error) {
-          console.error("Erro ao buscar dados paginados:", error);
+        if (!nextSkipToken) {
+          setEndOfList(true);
         }
+      } catch (error) {
+        console.error("Erro ao buscar dados paginados:", error);
+      } finally {
+        setLoadingScroll(false);
       }
     },
     [context],
@@ -102,19 +106,28 @@ export const News = (): ReactElement => {
           Voltar
         </ButtonBack>
       </ReturnLink>
-      <ContainerNews>
-        {listNews &&
-          listNews.map((news) => (
-            <CardNews key={news.Id} cardData={news}>
-              <LikeViews
-                likeLoadingControl={loading}
-                origin={"news"}
-                dataToLikeViews={news}
-                handleLike={(dataReceived) => handleLike(dataReceived)}
-              />
-            </CardNews>
-          ))}
-      </ContainerNews>
+      <InfiniteScroll
+        endOfListCondition={endOfList}
+        scrollRequestLoading={loadingScroll}
+        nextUrlRequest={nextUrlRequest ?? ""}
+        handlerPageChange={() => {
+          if (nextUrlRequest) getData(nextUrlRequest);
+        }}
+      >
+        <ContainerNews>
+          {listNews &&
+            listNews.map((news) => (
+              <CardNews key={news.Id} cardData={news}>
+                <LikeViews
+                  likeLoadingControl={loading}
+                  origin={"news"}
+                  dataToLikeViews={news}
+                  handleLike={(dataReceived) => handleLike(dataReceived)}
+                />
+              </CardNews>
+            ))}
+        </ContainerNews>
+      </InfiniteScroll>
     </div>
   );
 };
