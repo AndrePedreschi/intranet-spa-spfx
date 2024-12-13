@@ -84,5 +84,3 @@ export const CardNews = ({
     </CardWrapper>
   );
 };
-
-export { CardNews };

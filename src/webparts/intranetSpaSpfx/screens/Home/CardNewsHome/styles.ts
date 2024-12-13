@@ -6,7 +6,10 @@ export const NewsContainer = styled.div`
   max-width: 100%;
   margin: 20px auto;
   gap: 2%;
-  /* padding: 0 10.125rem; */
+
+  @media (max-width: 834px) {
+    grid-template-columns: 100%;
+  }
 `;
 
 export const MainNews = styled.div`
@@ -17,6 +20,7 @@ export const MainNews = styled.div`
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 6px;
+  align-items: flex-start;
 
   img {
     width: 100%;
@@ -36,6 +40,10 @@ export const MainNews = styled.div`
     color: #6f6f6f;
     font-size: 0.938rem;
     text-align: left;
+  }
+  .main-news-content {
+    width: 100%;
+    padding: 2rem;
   }
 `;
 
@@ -67,6 +75,7 @@ export const NewsItem = styled.div`
   }
   div {
   }
+
   h3 {
     margin: 10px 0 5px;
     font-size: 1.125rem;
@@ -95,9 +104,9 @@ export const UserInfo = styled.div`
 
   div {
     flex: 1;
-    justify-content: space-around;
     padding: 20px 0;
     align-items: center;
+    justify-content: flex-end;
 
     p:first-child {
       font-weight: bold;
