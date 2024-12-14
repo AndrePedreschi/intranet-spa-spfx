@@ -8,6 +8,7 @@ type State = {
 
 type Action = {
   updateContext: (context: State["context"]) => void;
+  updateUrlSite: (urlSite: string) => void;
 };
 
 export const useZustandStore = create<State & Action>((set) => ({
@@ -15,4 +16,5 @@ export const useZustandStore = create<State & Action>((set) => ({
   urlSite: "https://1s5y8.sharepoint.com/sites/SPA-Example",
 
   updateContext: (newContext) => set({ context: newContext }),
+  updateUrlSite: (newUrl) => set({ urlSite: newUrl }),
 }));

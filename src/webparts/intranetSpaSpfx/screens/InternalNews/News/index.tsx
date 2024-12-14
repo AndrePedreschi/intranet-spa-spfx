@@ -8,20 +8,20 @@ import {
   CommentContainer,
   CommentSection,
   Comment,
-  UserSection,
-  UserImg,
-  UserData,
   SubCommentsContainer,
   SubCommentSection,
   NewsImg,
 } from "./styles";
 import { LikeViews } from "../../../components/LikeViews";
 import { Loader } from "../../../components/Loader";
+import { UserSectionComponent } from "../../../components/UserSectionComponent";
 import {
   getCommentsList,
   TGetCommentsListResponse,
   postNewComment,
   updateCommentLikes,
+  deleteComment,
+  updateComment,
 } from "../../../services/comments.service";
 import {
   getNewsById,
@@ -33,10 +33,11 @@ import {
   getSubCommentsList,
   TGetSubCommentsListResponse,
   postNewSubComment,
+  deleteSubComment,
+  updateSubComment,
 } from "../../../services/subcomments.service";
 import { getUser, TGetUserResponse } from "../../../services/user.service";
 import { useZustandStore } from "../../../store";
-import { formatDate } from "../../../utils/formatDate";
 import { CommentForm } from "../CommentForm";
 
 type TSubComments = {
@@ -60,32 +61,53 @@ export const News = (): ReactElement => {
   const [news, setNews] = useState<TNews>();
   const [loading, setLoading] = useState<number>();
   const [commentLoading, setCommentLoading] = useState<boolean>(false);
+  const [editControl, setEditControl] = useState<{
+    commentId: number;
+    subCommentId?: number;
+  }>();
 
   const getData = useCallback(async () => {
-    if (context && context.pageContext) {
-      try {
-        await updateNewsViews(context, Number(id));
-        const newsResponse: TNews = await getNewsById(context, Number(id));
+    if (!context || !context.pageContext) return;
 
-        newsResponse["Comments"] = await getCommentsList(
-          context,
-          newsResponse.Id,
-        );
-        newsResponse["user"] = await getUser(context, newsResponse.AuthorId);
+    try {
+      await updateNewsViews(context, Number(id));
 
-        for await (const comment of newsResponse.Comments) {
-          comment.SubComments = await getSubCommentsList(context, comment.Id);
-          comment.user = await getUser(context, comment.AuthorId);
+      const newsResponse: TNews = await getNewsById(context, Number(id));
 
-          for await (const subComment of comment.SubComments) {
-            subComment.user = await getUser(context, subComment.AuthorId);
-          }
-        }
+      const [comments, user] = await Promise.all([
+        getCommentsList(context, newsResponse.Id),
+        getUser(context, newsResponse.AuthorId),
+      ]);
 
-        setNews(newsResponse);
-      } catch (error: any) {
-        console.error("Erro ao buscar notícia:", error.message || error);
-      }
+      const processedComments = await Promise.all(
+        comments.map(async (comment) => {
+          const [subComments, commentUser] = await Promise.all([
+            getSubCommentsList(context, comment.Id),
+            getUser(context, comment.AuthorId),
+          ]);
+
+          const processedSubComments = await Promise.all(
+            subComments.map(async (subComment) => ({
+              ...subComment,
+              user: await getUser(context, subComment.AuthorId),
+            })),
+          );
+
+          return {
+            ...comment,
+            SubComments: processedSubComments,
+            user: commentUser,
+          };
+        }),
+      );
+
+      setNews({
+        ...newsResponse,
+        Comments: processedComments,
+        user,
+      });
+    } catch (error: any) {
+      console.error("Erro ao buscar notícia:", error.message || error);
     }
   }, [context, id]);
 
@@ -125,7 +147,7 @@ export const News = (): ReactElement => {
         IdComentario: commentId,
         SubComentario: subComment,
       };
-      await postNewSubComment(context, subCommentBody);
+      const { subCommentId } = await postNewSubComment(context, subCommentBody);
 
       const currentUser = await getUser(context, currentUserId);
 
@@ -138,6 +160,7 @@ export const News = (): ReactElement => {
               ...subComment,
               {
                 ...subCommentBody,
+                Id: subCommentId,
                 AuthorId: currentUserId,
                 Created: new Date().toISOString(),
                 user: currentUser,
@@ -164,28 +187,148 @@ export const News = (): ReactElement => {
         IdNoticia: newsId,
       };
 
-      await postNewComment(context, commentBody);
-      const newCommentList = await getCommentsList(context, newsId);
-      for await (const comment of newCommentList) {
-        comment.SubComments = await getSubCommentsList(context, comment.Id);
-        comment.user = await getUser(context, comment.AuthorId);
-
-        for await (const subComment of comment.SubComments) {
-          subComment.user = await getUser(context, subComment.AuthorId);
-        }
-      }
+      const { newComment } = await postNewComment(context, commentBody);
+      newComment.user = await getUser(context, newComment.AuthorId);
 
       setNews((prevNews) => {
         if (!prevNews) return prevNews;
         return {
           ...prevNews,
-          Comments: newCommentList,
+          Comments: [...(prevNews.Comments || []), newComment],
         };
       });
       setCommentLoading(false);
     } catch (error) {
       console.error("Erro fazer um comentário:", error);
       setCommentLoading(false);
+    }
+  };
+
+  const deleteSubCommentFn = async (
+    commentId: number,
+    subCommentId: number,
+  ) => {
+    if (!context) return;
+
+    try {
+      await deleteSubComment(context, subCommentId);
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.map((comment) => {
+          if (comment.Id === commentId) {
+            const updatedSubComments = comment.SubComments?.filter(
+              (subComment) => subComment.Id !== subCommentId,
+            );
+            return { ...comment, SubComments: updatedSubComments };
+          }
+          return comment;
+        });
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao deletar um comentário:", error);
+    }
+  };
+
+  const deleteCommentFn = async (commentId: number) => {
+    if (!context) return;
+
+    if (!news || !news.Comments) {
+      console.error("Erro: `news` ou `news.Comments` está indefinido.");
+      return;
+    }
+    try {
+      await deleteComment(context, commentId);
+
+      const commentToDelete = news.Comments?.find(
+        (comment) => comment.Id === commentId,
+      );
+
+      if (commentToDelete?.SubComments) {
+        const validSubCommentIds = commentToDelete.SubComments.map(
+          (subComment) => subComment.Id,
+        ).filter((id): id is number => id !== undefined);
+
+        await Promise.all(
+          validSubCommentIds.map((subCommentId) =>
+            deleteSubComment(context, subCommentId),
+          ),
+        );
+      }
+
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.filter(
+          (comment) => comment.Id !== commentId,
+        );
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao deletar um comentário:", error);
+    }
+  };
+
+  const updateCommentFn = async (msg: string, commentId: number) => {
+    if (!context) return;
+
+    try {
+      await updateComment(context, commentId, msg);
+
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.map((comment) => {
+          if (comment.Id === commentId) {
+            return { ...comment, Comentario: msg };
+          } else {
+            return comment;
+          }
+        });
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao editar um comentário:", error);
+    } finally {
+      setEditControl(undefined);
+    }
+  };
+
+  const updateSubCommentFn = async (
+    msg: string,
+    commentId: number,
+    subCommentId: number,
+  ) => {
+    if (!context) return;
+
+    try {
+      await updateSubComment(context, subCommentId, msg);
+
+      setNews((prevNews) => {
+        if (!prevNews) return prevNews;
+        const updatedComments = prevNews.Comments?.map((comment) => {
+          if (comment.Id === commentId) {
+            const updatedSubComments = comment.SubComments?.map(
+              (subComment) => {
+                if (subComment.Id === subCommentId) {
+                  return { ...subComment, SubComentario: msg };
+                } else {
+                  return subComment;
+                }
+              },
+            );
+            return { ...comment, SubComments: updatedSubComments };
+          }
+          return comment;
+        });
+
+        return { ...prevNews, Comments: updatedComments };
+      });
+    } catch (error) {
+      console.error("Erro ao editar um comentário:", error);
+    } finally {
+      setEditControl(undefined);
     }
   };
 
@@ -197,13 +340,7 @@ export const News = (): ReactElement => {
     <Container>
       {news.LinkBanner && <NewsImg src={news.LinkBanner} />}
       <h1>{news.Title || "Título indisponível"}</h1>
-      <UserSection>
-        <UserImg $url={news.user?.UserImg} />
-        <UserData>
-          <h1>{news.user?.Title}</h1>
-          <p>{formatDate(news.Created)}</p>
-        </UserData>
-      </UserSection>
+      <UserSectionComponent actionMenu={false} userData={news} />
       <p>{news.Descricao || "Descrição indisponível"}</p>
       <LikeViews
         likeLoadingControl={loading}
@@ -222,15 +359,28 @@ export const News = (): ReactElement => {
           news.Comments.map((comment) => (
             <CommentSection key={comment.Id}>
               <Comment>
-                <UserSection>
-                  <UserImg $url={comment.user?.UserImg} />
+                <UserSectionComponent
+                  actionMenu={true}
+                  resetMenu={editControl === undefined}
+                  userData={comment}
+                  handleDelete={() => deleteCommentFn(comment.Id)}
+                  handleEdit={() => setEditControl({ commentId: comment.Id })}
+                  handleCancel={() => setEditControl(undefined)}
+                />
 
-                  <UserData>
-                    <h1>{comment.user?.Title}</h1>
-                    <p>{formatDate(comment.Created)}</p>
-                  </UserData>
-                </UserSection>
-                <p>{comment.Comentario}</p>
+                {editControl?.commentId === comment.Id &&
+                !editControl.subCommentId ? (
+                  <CommentForm
+                    id={`${comment.Id}`}
+                    msgToEdit={comment.Comentario}
+                    formType={"EditComment"}
+                    submitFunction={(formDataReceived) =>
+                      updateCommentFn(formDataReceived.msg, comment.Id)
+                    }
+                  />
+                ) : (
+                  <p>{comment.Comentario}</p>
+                )}
                 <hr />
                 <LikeViews
                   likeLoadingControl={loading}
@@ -246,33 +396,59 @@ export const News = (): ReactElement => {
                       <SubCommentSection
                         key={subComment.Created + subComment.AuthorId}
                       >
-                        <UserSection>
-                          <UserImg $url={subComment.user?.UserImg} />
-
-                          <UserData>
-                            <h1>{subComment.user?.Title}</h1>
-                            <p>{formatDate(subComment.Created)}</p>
-                          </UserData>
-                        </UserSection>
-
-                        <p>{subComment.SubComentario}</p>
+                        <UserSectionComponent
+                          actionMenu={true}
+                          resetMenu={editControl === undefined}
+                          userData={subComment}
+                          handleDelete={() =>
+                            deleteSubCommentFn(comment.Id, subComment.Id)
+                          }
+                          handleEdit={() =>
+                            setEditControl({
+                              commentId: comment.Id,
+                              subCommentId: subComment.Id,
+                            })
+                          }
+                          handleCancel={() => setEditControl(undefined)}
+                        />
+                        {editControl?.commentId === comment.Id &&
+                        editControl.subCommentId === subComment.Id ? (
+                          <CommentForm
+                            id={`${comment.Id}-${subComment.Id}`}
+                            msgToEdit={subComment.SubComentario}
+                            formType={"EditComment"}
+                            submitFunction={(formDataReceived) =>
+                              updateSubCommentFn(
+                                formDataReceived.msg,
+                                comment.Id,
+                                subComment.Id,
+                              )
+                            }
+                          />
+                        ) : (
+                          <p>{subComment.SubComentario}</p>
+                        )}
                       </SubCommentSection>
                     ))}
                 </SubCommentsContainer>
               </Comment>
               <CommentForm
                 formType={"SubComment"}
-                submitFunction={(subComment) =>
-                  postSubComment(subComment.msg, comment.Id)
+                submitFunction={(formDataReceived) =>
+                  postSubComment(formDataReceived.msg, comment.Id)
                 }
               />
             </CommentSection>
           ))}
-        {commentLoading && <Loader />}
+        {commentLoading && (
+          <LoadingContainer>
+            <Loader />
+          </LoadingContainer>
+        )}
       </CommentContainer>
     </Container>
   ) : (
-    <LoadingContainer>
+    <LoadingContainer $addHeight={true}>
       <Loader />
     </LoadingContainer>
   );

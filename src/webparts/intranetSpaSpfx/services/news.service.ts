@@ -396,7 +396,6 @@ export const updateNewsLikes = async (
  * }
  * ```
  */
-
 export const updateNewsLikesAndViews = async (
   context: WebPartContext,
   newsId: number,
