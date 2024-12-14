@@ -161,3 +161,49 @@ export const deleteSubComment = async (
     throw new Error(`Failed to update Views: ${errorText}`);
   }
 };
+
+/**
+ * Atualiza a mensagem de um subcomentário específico.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart necessário para realizar a chamada à API REST do SharePoint.
+ * @param {number} subCommentId - O ID do subcomentário a ser editado.
+ * @param {string} msgToEdit - O novo conteúdo do subcomentário.
+ * @returns {Promise<void>} - Retorna uma Promise que é resolvida quando o subcomentário é atualizado com sucesso.
+ * @throws {Error} - Lança um erro caso a requisição falhe, incluindo detalhes da resposta do servidor.
+ *
+ * @example
+ * // Exemplo de uso
+ * try {
+ *   await updateSubComment(context, 456, "Novo conteúdo do subcomentário");
+ *   console.log("Subcomentário atualizado com sucesso!");
+ * } catch (error) {
+ *   console.error("Erro ao atualizar o subcomentário:", error);
+ * }
+ */
+export const updateSubComment = async (
+  context: WebPartContext,
+  subCommentId: number,
+  msgToEdit: string,
+): Promise<void> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items(${subCommentId})`;
+
+  const body = JSON.stringify({
+    SubComentario: msgToEdit,
+  });
+
+  const headers = {
+    "X-HTTP-Method": "MERGE",
+    "IF-MATCH": "*",
+  };
+
+  const updateResponse = await context.spHttpClient.post(
+    urlBase,
+    SPHttpClient.configurations.v1,
+    { body: body, headers: headers },
+  );
+
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text();
+    throw new Error(`Failed to update Views: ${errorText}`);
+  }
+};

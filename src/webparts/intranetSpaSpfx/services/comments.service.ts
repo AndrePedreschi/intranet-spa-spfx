@@ -235,3 +235,49 @@ export const deleteComment = async (
     throw new Error(`Failed to update Views: ${errorText}`);
   }
 };
+
+/**
+ * Atualiza a mensagem de um comentário específico.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart necessário para realizar a chamada à API REST do SharePoint.
+ * @param {number} commentId - O ID do comentário a ser editado.
+ * @param {string} msgToEdit - O novo conteúdo do comentário.
+ * @returns {Promise<void>} - Retorna uma Promise que é resolvida quando o comentário é atualizado com sucesso.
+ * @throws {Error} - Lança um erro caso a requisição falhe, incluindo detalhes da resposta do servidor.
+ *
+ * @example
+ * // Exemplo de uso
+ * try {
+ *   await updateComment(context, 123, "Novo conteúdo do comentário");
+ *   console.log("Comentário atualizado com sucesso!");
+ * } catch (error) {
+ *   console.error("Erro ao atualizar o comentário:", error);
+ * }
+ */
+export const updateComment = async (
+  context: WebPartContext,
+  commentId: number,
+  msgToEdit: string,
+): Promise<void> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Comentarios')/items(${commentId})`;
+
+  const body = JSON.stringify({
+    Comentario: msgToEdit,
+  });
+
+  const headers = {
+    "X-HTTP-Method": "MERGE",
+    "IF-MATCH": "*",
+  };
+
+  const updateResponse = await context.spHttpClient.post(
+    urlBase,
+    SPHttpClient.configurations.v1,
+    { body: body, headers: headers },
+  );
+
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text();
+    throw new Error(`Failed to update Views: ${errorText}`);
+  }
+};

@@ -1,19 +1,26 @@
 import styled, { css } from "styled-components";
 
 export const Container = styled.div<{ $formType: string }>`
-  ${({ $formType }) =>
-    $formType === "Comment"
-      ? css`
-          padding: 1rem 0 1rem 1rem;
-          border-radius: 16px;
-          border: 1px solid #eeeeee;
-          -webkit-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
-          -moz-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
-          box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
-        `
-      : css`
-          padding: 0 0 1rem 1rem;
-        `}
+  ${({ $formType }) => {
+    if ($formType === "Comment") {
+      return css`
+        padding: 1rem 0 1rem 1rem;
+        border-radius: 16px;
+        border: 1px solid #eeeeee;
+        -webkit-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
+        -moz-box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
+        box-shadow: 0px 12px 48px 0px rgba(233, 233, 233, 1);
+      `;
+    } else if ($formType === "SubComment") {
+      return css`
+        padding: 0 0 1rem 1rem;
+      `;
+    } else {
+      return css`
+        padding: 0;
+      `;
+    }
+  }}
   display: flex;
   gap: 1rem;
 `;
@@ -36,12 +43,13 @@ export const Form = styled.form`
   width: 100%;
 `;
 
-export const ActionSection = styled.section`
+export const InputSection = styled.section`
   display: flex;
   align-items: center;
 
   button {
     position: relative;
+    top: 2px;
     left: -28px;
     border: none;
     background-color: transparent;
@@ -49,7 +57,7 @@ export const ActionSection = styled.section`
   }
 `;
 
-export const InputsSection = styled.section`
+export const FormElementSection = styled.section`
   width: 100%;
 
   label {
@@ -58,7 +66,7 @@ export const InputsSection = styled.section`
     gap: 0.25rem;
 
     input {
-      padding: 1rem;
+      padding: 1rem 2.25rem 1rem 1rem;
       width: 100%;
       height: 2.5rem;
       border-radius: 8px;
@@ -71,9 +79,15 @@ export const InputsSection = styled.section`
   }
 `;
 
+export const NotificationSection = styled.section`
+  display: flex;
+  justify-content: space-between;
+  padding-right: 1rem;
+`;
+
 export const ErrorContainer = styled.div`
   height: 14px;
-
+  width: 125px;
   p {
     font-weight: 700;
     color: #ff786f;

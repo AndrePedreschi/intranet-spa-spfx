@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export const Container = styled.div`
   display: flex;
@@ -20,14 +20,21 @@ export const Container = styled.div`
     border-top: 1px solid #eeeeee;
   }
 `;
-export const LoadingContainer = styled.div`
+
+export const LoadingContainer = styled.div<{ $addHeight?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 80vh;
-  @media (max-width: 768px) {
-    min-height: 85vh;
-  }
+  ${({ $addHeight }) => {
+    if ($addHeight) {
+      return css`
+        min-height: 80vh;
+        @media (max-width: 768px) {
+          min-height: 85vh;
+        }
+      `;
+    }
+  }}
 `;
 
 export const CommentContainer = styled.div`
@@ -83,43 +90,9 @@ export const SubCommentSection = styled.section`
   animation-range: entry 0%;
 `;
 
-export const UserSection = styled.section`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-`;
-
-export const UserImg = styled.div<{ $url: string }>`
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  background-image: url(${({ $url }) => $url});
-  background-repeat: no-repeat;
-  background-size: contain;
-`;
-
 export const NewsImg = styled.img`
   height: auto;
   width: 100%;
   object-fit: contain;
   border-radius: 12px;
-`;
-
-export const UserData = styled.section`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-
-  h1 {
-    font-size: 0.75rem;
-    font-family: "Poppins", sans-serif;
-    color: #323232;
-    font-weight: 600;
-  }
-  p {
-    font-size: 0.75rem;
-    font-family: "Roboto", sans-serif;
-    color: #6f6f6f;
-  }
 `;
