@@ -87,3 +87,10 @@ export const DoubleArrow = styled.img`
   width: 24px;
   height: 24px;
 `;
+
+export const ViewAllLikes = styled.p`
+  font-size: 0.75rem;
+  color: #6f6f6f;
+  text-decoration: underline;
+  cursor: pointer;
+`;

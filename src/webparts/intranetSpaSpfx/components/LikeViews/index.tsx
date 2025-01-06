@@ -1,5 +1,7 @@
 import { ReactElement, useEffect, useState } from "react";
 
+import { Tooltip } from "@mui/material";
+
 import { Container, LikesSection, IconHeart } from "./styles";
 import likedHeart from "../../assets/heart-liked.svg";
 import iconHeart from "../../assets/icon-heart.svg";
@@ -16,6 +18,7 @@ type TLikeViews = {
   showLike?: boolean;
   showViews?: boolean;
   handleLike?: (dataToSend: { id: number; arrayLikes: number[] }) => void;
+  usersInfo?: Record<number, { name: string }>;
 };
 
 export const LikeViews = ({
@@ -25,6 +28,7 @@ export const LikeViews = ({
   dataToLikeViews,
   origin,
   handleLike,
+  usersInfo,
 }: TLikeViews): ReactElement => {
   const { context } = useZustandStore();
   const user: number = context?.pageContext?.legacyPageContext.userId;
@@ -62,15 +66,56 @@ export const LikeViews = ({
     <Container>
       {showLike && (
         <LikesSection>
-          {(likeLoadingControl === id && origin === "comment") ||
-          (likeLoadingControl === id && origin === "news") ? (
+          {likeLoadingControl === id &&
+          (origin === "comment" || origin === "news") ? (
             <Spinner />
           ) : (
-            <IconHeart
-              src={likes.includes(user) ? likedHeart : iconHeart}
-              alt="heart"
-              onClick={likeSomething}
-            />
+            <Tooltip
+              title={
+                likes.length > 0 ? (
+                  <div>
+                    {likes.length <= 4
+                      ? likes.map((id) => (
+                          <div key={id}>
+                            {usersInfo && usersInfo[id]?.name
+                              ? usersInfo[id]?.name
+                              : "Carregando..."}
+                          </div>
+                        ))
+                      : (() => {
+                          const randomLikes = likes
+                            .sort(() => 0.5 - Math.random())
+                            .slice(0, 4);
+                          return (
+                            <div>
+                              {randomLikes.map((id) => (
+                                <div key={id}>
+                                  {usersInfo && usersInfo[id]?.name
+                                    ? usersInfo[id]?.name
+                                    : "Carregando..."}
+                                </div>
+                              ))}
+                              <div>
+                                e outras {likes.length - 4} pessoas curtiram
+                                isso
+                              </div>
+                            </div>
+                          );
+                        })()}
+                  </div>
+                ) : (
+                  "Nenhum usuário curtiu ainda"
+                )
+              }
+              arrow
+              placement="top"
+            >
+              <IconHeart
+                src={likes.includes(user) ? likedHeart : iconHeart}
+                alt="heart"
+                onClick={likeSomething}
+              />
+            </Tooltip>
           )}
           <p>
             {likes.length} {likes.length === 1 ? "Like" : "Likes"}
