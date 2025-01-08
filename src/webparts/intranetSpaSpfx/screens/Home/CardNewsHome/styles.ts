@@ -73,8 +73,6 @@ export const NewsItem = styled.div`
     display: flex;
     flex-direction: column;
   }
-  div {
-  }
 
   h3 {
     margin: 10px 0 5px;

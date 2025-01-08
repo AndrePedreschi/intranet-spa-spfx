@@ -6,7 +6,7 @@ import { BannerContainer } from "./styles";
 import { getBannersList, TGetBannersList } from "../../services/logo.service";
 import { useZustandStore } from "../../store";
 
-export const Carrousel = (): ReactElement => {
+export const Carroussel = (): ReactElement => {
   const { context } = useZustandStore();
   const [banners, setBanners] = useState<TGetBannersList[]>([]);
 
@@ -41,13 +41,14 @@ export const Carrousel = (): ReactElement => {
           },
         }}
       >
-        {banners.map((banner) => (
-          <SwiperSlide key={banner.Name}>
-            <img
-              style={{ backgroundImage: `url(${banner.ServerRelativeUrl})` }}
-            />
-          </SwiperSlide>
-        ))}
+        {banners &&
+          banners.map((banner) => (
+            <SwiperSlide key={banner.Name}>
+              <img
+                style={{ backgroundImage: `url(${banner.ServerRelativeUrl})` }}
+              />
+            </SwiperSlide>
+          ))}
       </Swiper>
     </BannerContainer>
   );

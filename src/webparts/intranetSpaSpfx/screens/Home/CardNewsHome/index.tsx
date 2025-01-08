@@ -18,18 +18,11 @@ import { formatDate } from "../../../utils/formatDate";
 import { motion } from "framer-motion";
 import { Spinner } from "../../../components/Spinner";
 
-const truncateText = (text: string, maxLength: number): string => {
-  if (text.length > maxLength) {
-    return text.slice(0, maxLength) + "...";
-  }
-  return text;
-};
-
 export const CardNewsHome = (): ReactElement => {
   const { context } = useZustandStore();
   const [news, setNews] = useState<TGetNewsListResponse[]>([]);
   const [users, setUsers] = useState<Record<number, TGetUserResponse>>({});
-  const [loading, setLoading] = useState(true); // Estado de carregamento
+  const [loading, setLoading] = useState(true);
 
   const fetchNews = useCallback(async () => {
     if (!context) return;
@@ -80,31 +73,30 @@ export const CardNewsHome = (): ReactElement => {
     return <p style={{ textAlign: "center" }}>Nenhuma notícia disponível.</p>;
   }
 
-  const [mainNews, ...otherNews] = news.reverse();
-
   return (
     <NewsContainer>
       {/* Notícia Principal */}
-      <motion.div
-        initial={{ opacity: 0, x: -100 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: false }}
-        transition={{ duration: 0.8 }}
-      >
-        <MainNews>
-          <img src={mainNews.LinkBanner} alt={mainNews.Title} />
-          <div className="main-news-content">
-            <h2>{mainNews.Title}</h2>
-            <p>
-              {truncateText(mainNews.Descricao, 185)}{" "}
-              <Link
-                to={`/internalNews/${mainNews.Id}`}
-                style={{ color: "blue", textDecoration: "underline" }}
-              >
-                Leia Mais
-              </Link>
-            </p>
-            <div>
+      {news.slice(0, 1).map((mainNews) => (
+        <motion.div
+          key={mainNews.Id}
+          initial={{ opacity: 0, x: -100 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8 }}
+        >
+          <MainNews>
+            <img src={mainNews.LinkBanner} alt={mainNews.Title} />
+            <div className="main-news-content">
+              <h2>{mainNews.Title}</h2>
+              <p>
+                {mainNews.Descricao.slice(0, 185)}...{" "}
+                <Link
+                  to={`/internalNews/${mainNews.Id}`}
+                  style={{ color: "blue", textDecoration: "underline" }}
+                >
+                  Leia Mais
+                </Link>
+              </p>
               <UserInfo>
                 <img
                   src={
@@ -112,13 +104,9 @@ export const CardNewsHome = (): ReactElement => {
                     "https://via.placeholder.com/40"
                   }
                   alt={users[mainNews.AuthorId]?.Title || "Imagem do usuário"}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    borderRadius: "50%",
-                  }}
+                  style={{ width: "40px", height: "40px", borderRadius: "50%" }}
                 />
-                <div style={{ width: "100%" }}>
+                <div>
                   <p>
                     {users[mainNews.AuthorId]?.Title || "Carregando usuário..."}
                   </p>
@@ -131,13 +119,13 @@ export const CardNewsHome = (): ReactElement => {
                 />
               </UserInfo>
             </div>
-          </div>
-        </MainNews>
-      </motion.div>
+          </MainNews>
+        </motion.div>
+      ))}
 
       {/* Outras Notícias */}
       <OtherNews>
-        {otherNews.map((item, index) => (
+        {news.slice(1).map((item, index) => (
           <motion.div
             key={item.Id}
             initial={{ opacity: 0, y: 50 }}
@@ -153,7 +141,7 @@ export const CardNewsHome = (): ReactElement => {
               <div>
                 <h3>{item.Title}</h3>
                 <p>
-                  {truncateText(item.Descricao, 120)}{" "}
+                  {item.Descricao.slice(0, 120)}...{" "}
                   <Link
                     to={`/internalNews/${item.Id}`}
                     style={{ color: "blue", textDecoration: "underline" }}
@@ -165,7 +153,7 @@ export const CardNewsHome = (): ReactElement => {
                   <img
                     src={
                       users[item.AuthorId]?.UserImg ||
-                      `https://via.placeholder.com/40`
+                      "https://via.placeholder.com/40"
                     }
                     alt={users[item.AuthorId]?.Title || "Imagem do usuário"}
                   />

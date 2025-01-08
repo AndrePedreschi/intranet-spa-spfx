@@ -56,6 +56,29 @@ export const getMostViewedNewsList = async (
   return responseJson.value;
 };
 
+export const getMostViewedNewsListorder = async (
+  context: WebPartContext,
+  amountOfNews: number,
+): Promise<TGetNewsListResponse[]> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('Noticias')/items`;
+  const select = `?$select=Id,Title,LikedUsers,Views,LinkBanner,Descricao,Created,AuthorId`;
+  const orderBy = `&$orderby=Created desc`;
+  const top = `&$top=${amountOfNews}`;
+
+  const response = await context.spHttpClient.get(
+    `${urlBase}${select}${orderBy}${top}`,
+    SPHttpClient.configurations.v1,
+  );
+
+  if (!response || (response && !response.ok)) {
+    const responseText = await response.text();
+    throw new Error(responseText);
+  }
+
+  const responseJson = await response.json();
+  return responseJson.value;
+};
+
 /**
  * Recupera os detalhes de uma notícia específica pelo seu ID a partir de uma lista no SharePoint.
  *

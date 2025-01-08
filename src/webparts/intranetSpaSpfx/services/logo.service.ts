@@ -61,6 +61,26 @@ export type TGetBannersList = {
   ServerRelativeUrl: string;
 };
 
+/**
+ * Obtém a lista de banners de uma pasta específica na biblioteca de imagens do SharePoint.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart, utilizado para acessar a API do SharePoint.
+ * @returns {Promise<TGetBannersList[]>} - Uma promessa que resolve para uma lista de objetos representando os banners, contendo nome e URL relativa.
+ * @throws {Error} - Lança um erro se a requisição à API do SharePoint falhar.
+ *
+ * @example
+ * import { getBannersList } from './path/to/file';
+ *
+ * const context = this.context; // Contexto do WebPart.
+ *
+ * getBannersList(context)
+ *   .then((banners) => {
+ *     console.log(banners);
+ *   })
+ *   .catch((error) => {
+ *     console.error('Erro ao buscar banners:', error);
+ *   });
+ */
 export const getBannersList = async (
   context: WebPartContext,
 ): Promise<TGetBannersList[]> => {
