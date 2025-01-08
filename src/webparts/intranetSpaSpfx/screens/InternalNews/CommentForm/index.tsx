@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -6,41 +6,61 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { commentFormSchema, TCommentsFormFields } from "./schema";
 import {
   Container,
-  InputsSection,
+  FormElementSection,
   ErrorContainer,
   UserImg,
   Form,
-  ActionSection,
+  InputSection,
   UserSection,
+  NotificationSection,
 } from "./styles";
 import SendIcon from "../../../assets/icon-send.svg";
 import { useZustandStore } from "../../../store";
 
 type TCommentFormProps = {
-  formType: "Comment" | "SubComment";
+  id?: string;
+  msgToEdit?: string;
+  formType: "Comment" | "SubComment" | "EditComment";
   submitFunction: ({ msg }: TCommentsFormFields) => void;
 };
 
 export function CommentForm({
+  id,
+  msgToEdit,
   formType,
   submitFunction,
 }: TCommentFormProps): ReactElement {
   const { context, urlSite } = useZustandStore();
-  const [user, setUser] = useState<string>("");
+  const userPhotoUrl = useMemo(() => {
+    return `${urlSite}/_layouts/15/userphoto.aspx?UserName=${context?.pageContext.legacyPageContext.userLoginName}&size=L`;
+  }, [urlSite, context?.pageContext.legacyPageContext.userLoginName]);
+
+  const [activateCharacterLength, setActivateCharacterLength] =
+    useState<boolean>(false);
+
   const formMethods = useForm<TCommentsFormFields>({
     mode: "onSubmit",
     resolver: zodResolver(commentFormSchema),
   });
 
   const {
+    setValue,
+    watch,
     reset,
     getValues,
     register,
     handleSubmit,
     formState: { errors, isDirty, isSubmitting },
   } = formMethods;
+
+  const msg = watch("msg");
+  const msgLength = useMemo(() => {
+    return msg !== undefined ? `${msg.length}/255` : "0/255";
+  }, [msg]);
+
   const onSubmit: SubmitHandler<TCommentsFormFields> = (): void => {
     const payload = getValues();
+
     try {
       submitFunction(payload);
       reset();
@@ -49,42 +69,59 @@ export function CommentForm({
     }
   };
 
-  useEffect(() => {
-    if (
-      !context ||
-      context === undefined ||
-      context.pageContext === undefined ||
-      context.pageContext.legacyPageContext === undefined
-    )
-      return;
-    const user: string = context.pageContext.legacyPageContext.userLoginName;
-    const userPhotoUrl = `${urlSite}/_layouts/15/userphoto.aspx?UserName=${user}&size=L`;
+  const setMsgData = useCallback(() => {
+    if (msgToEdit)
+      setValue("msg", msgToEdit, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+  }, [msgToEdit, setValue]);
 
-    setUser(userPhotoUrl);
-  }, [context, urlSite]);
+  useEffect(() => {
+    setMsgData();
+    if (formType === "EditComment" && id) {
+      const input = document.getElementById(id);
+      input?.focus();
+    }
+  }, [formType, id, setMsgData]);
 
   return (
     <Container $formType={formType}>
-      <UserSection>
-        <UserImg $url={user} />
-      </UserSection>
+      {formType !== "EditComment" && (
+        <UserSection>
+          <UserImg $url={userPhotoUrl} />
+        </UserSection>
+      )}
       <Form onSubmit={handleSubmit(onSubmit)}>
-        <InputsSection>
+        <FormElementSection>
           <label>
-            <ActionSection>
-              <input {...register("msg")} placeholder="Digite aqui..." />
+            <InputSection>
+              <input
+                id={id}
+                {...register("msg")}
+                onFocus={() => setActivateCharacterLength(true)}
+                onBlur={() => setActivateCharacterLength(false)}
+                placeholder="Digite aqui..."
+                maxLength={255}
+                autoComplete="off"
+              />
               <button type="submit" disabled={!isDirty || isSubmitting}>
                 <img src={SendIcon} alt="send icone" />
               </button>
-            </ActionSection>
+            </InputSection>
 
-            {errors.msg && (
-              <ErrorContainer>
-                <p role="alert">{errors.msg.message}</p>
-              </ErrorContainer>
-            )}
+            {errors.msg || activateCharacterLength ? (
+              <NotificationSection>
+                <ErrorContainer>
+                  {errors.msg ? <p role="alert">{errors.msg.message}</p> : null}
+                </ErrorContainer>
+
+                {activateCharacterLength && <p>{msgLength}</p>}
+              </NotificationSection>
+            ) : null}
           </label>
-        </InputsSection>
+        </FormElementSection>
       </Form>
     </Container>
   );

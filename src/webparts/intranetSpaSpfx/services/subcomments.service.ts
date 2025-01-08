@@ -6,7 +6,7 @@ import { TGetUserResponse } from "./user.service";
 
 export type TGetSubCommentsListResponse = {
   user: TGetUserResponse;
-  Id?: number;
+  Id: number;
   IdComentario: number;
   SubComentario: string;
   Created: string;
@@ -92,7 +92,7 @@ export const getSubCommentsList = async (
 export const postNewSubComment = async (
   context: WebPartContext,
   requestBody: TRequestBody,
-): Promise<{ msg: string }> => {
+): Promise<{ msg: string; subCommentId: number }> => {
   const url = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items`;
 
   const body = JSON.stringify(requestBody);
@@ -112,5 +112,98 @@ export const postNewSubComment = async (
     const errorText = await updateResponse.text();
     throw new Error(`Failed to update Views: ${errorText}`);
   }
-  return { msg: "Comentário enviado com sucesso!" };
+
+  const postResponseJson = await updateResponse.json();
+
+  return {
+    msg: "Comentário enviado com sucesso!",
+    subCommentId: postResponseJson.Id,
+  };
+};
+
+/**
+ * Exclui um subcomentário de uma lista do SharePoint com base no ID fornecido.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart necessário para realizar a chamada à API REST do SharePoint.
+ * @param {number} subCommentId - O ID do subcomentário que será excluído.
+ * @returns {Promise<void>} - Retorna uma Promise resolvida quando a exclusão for bem-sucedida.
+ * @throws {Error} - Lança um erro caso a requisição falhe, incluindo detalhes da resposta do servidor.
+ *
+ * @example
+ * // Exemplo de uso
+ * try {
+ *   await deleteSubComment(context, 123);
+ *   console.log("Subcomentário excluído com sucesso!");
+ * } catch (error) {
+ *   console.error("Erro ao excluir subcomentário:", error);
+ * }
+ */
+export const deleteSubComment = async (
+  context: WebPartContext,
+  subCommentId: number,
+): Promise<void> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items(${subCommentId})`;
+
+  const body = JSON.stringify({ Id: subCommentId });
+  const headers = {
+    "X-HTTP-Method": "DELETE",
+    "IF-MATCH": "*",
+  };
+
+  const updateResponse = await context.spHttpClient.post(
+    urlBase,
+    SPHttpClient.configurations.v1,
+    { body: body, headers: headers },
+  );
+
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text();
+    throw new Error(`Failed to update Views: ${errorText}`);
+  }
+};
+
+/**
+ * Atualiza a mensagem de um subcomentário específico.
+ *
+ * @param {WebPartContext} context - O contexto do WebPart necessário para realizar a chamada à API REST do SharePoint.
+ * @param {number} subCommentId - O ID do subcomentário a ser editado.
+ * @param {string} msgToEdit - O novo conteúdo do subcomentário.
+ * @returns {Promise<void>} - Retorna uma Promise que é resolvida quando o subcomentário é atualizado com sucesso.
+ * @throws {Error} - Lança um erro caso a requisição falhe, incluindo detalhes da resposta do servidor.
+ *
+ * @example
+ * // Exemplo de uso
+ * try {
+ *   await updateSubComment(context, 456, "Novo conteúdo do subcomentário");
+ *   console.log("Subcomentário atualizado com sucesso!");
+ * } catch (error) {
+ *   console.error("Erro ao atualizar o subcomentário:", error);
+ * }
+ */
+export const updateSubComment = async (
+  context: WebPartContext,
+  subCommentId: number,
+  msgToEdit: string,
+): Promise<void> => {
+  const urlBase = `${urlSite}/_api/web/lists/getbytitle('SubComentarios')/items(${subCommentId})`;
+
+  const body = JSON.stringify({
+    SubComentario: msgToEdit,
+  });
+
+  const headers = {
+    "X-HTTP-Method": "MERGE",
+    "IF-MATCH": "*",
+  };
+
+  const updateResponse = await context.spHttpClient.post(
+    urlBase,
+    SPHttpClient.configurations.v1,
+    { body: body, headers: headers },
+  );
+
+  if (!updateResponse.ok) {
+    const errorText = await updateResponse.text();
+    throw new Error(`Failed to update Views: ${errorText}`);
+  }
 };
